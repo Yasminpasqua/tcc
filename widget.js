@@ -179,7 +179,7 @@ class IncluaAIWidget {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             return 'http://localhost:8080';
         }
-        return 'https://inclua-ai-servidor.onrender.com';
+        return 'https://inclua.187-41-102-56.sslip.io';
     }
 
     // ==========================================================================
@@ -861,6 +861,12 @@ ${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
     }
 
     triggerAction(action, name) {
+        // Controle por voz não tem card no painel: o atalho aciona direto
+        if (action === 'voice-commands') {
+            this.toggleVoiceCommands();
+            this.announceToScreenReader(`${name} ${this.settings.voiceCommands ? 'ativado' : 'desativado'}`);
+            return;
+        }
         const button = document.querySelector(`[data-action="${action}"]`);
         if (button) {
             this.handleAction(action, button);
@@ -1721,6 +1727,14 @@ ${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
                 return;
             }
             console.error('Erro de reconhecimento:', event.error);
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                // Microfone negado: desliga para não ficar em loop
+                this.settings.voiceCommands = false;
+                this.isListening = false;
+                this.showVoiceIndicator(false);
+                this.showToast('🎙️ Permita o uso do microfone no cadeado da barra de endereço e tente de novo', 'error');
+                return;
+            }
             this.showToast(`Erro de voz: ${event.error}`, 'error');
         };
 
@@ -1828,7 +1842,20 @@ ${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
             'traduzir': () => this.execVoice('libras-hover', 'Tradução Libras'),
             'língua de sinais': () => this.execVoice('libras-hover', 'Libras'),
 
+            // Leitor de tela (ler ao passar o mouse)
+            'leitor de tela': () => this.execVoice('hover-reader', 'Leitor de tela'),
+            'ler ao passar': () => this.execVoice('hover-reader', 'Leitura ao passar ativada'),
+
+            // Filtros de daltonismo
+            'protanopia': () => this.voiceColorFilter('protanopia', 'Filtro protanopia'),
+            'deuteranopia': () => this.voiceColorFilter('deuteranopia', 'Filtro deuteranopia'),
+            'tritanopia': () => this.voiceColorFilter('tritanopia', 'Filtro tritanopia'),
+            'acromatopsia': () => this.voiceColorFilter('achromatopsia', 'Filtro acromatopsia'),
+            'sem filtro': () => this.voiceColorFilter('none', 'Filtro removido'),
+            'remover filtro': () => this.voiceColorFilter('none', 'Filtro removido'),
+
             // Ajuda
+            'fechar ajuda': () => this.closeVoiceHelp(),
             'ajuda': () => this.showVoiceHelpModal(),
             'comandos': () => this.showVoiceHelpModal(),
             'o que posso falar': () => this.showVoiceHelpModal(),
@@ -1855,8 +1882,11 @@ ${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
         let matched = false;
         const sortedCommands = Object.entries(commands).sort((a, b) => b[0].length - a[0].length);
 
+        const helpKeys = ['ajuda', 'comandos', 'o que posso falar', 'help'];
         for (const [key, action] of sortedCommands) {
             if (command.includes(key)) {
+                // Qualquer comando (menos pedir a ajuda de novo) fecha o pop-up de ajuda
+                if (!helpKeys.includes(key)) this.closeVoiceHelp();
                 action();
                 matched = true;
                 break;
@@ -1876,20 +1906,42 @@ ${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
         }
     }
 
+    voiceColorFilter(type, feedback) {
+        const select = document.getElementById('colorblind-filter');
+        if (select) select.value = type;
+        this.applyColorblindFilter(type);
+        this.showToast(`✅ ${feedback}`, 'success');
+    }
+
+    closeVoiceHelp() {
+        const modal = this.voiceHelpModal;
+        if (modal && modal.isConnected) {
+            modal.querySelector('.modal-close')?.click();
+        }
+        this.voiceHelpModal = null;
+    }
+
     showVoiceHelpModal() {
+        this.closeVoiceHelp();
         this.showModal('🎙️ Comandos de Voz', `
             <div style="text-align: left; line-height: 1.8;">
-                <p><strong>📏 Fonte:</strong> "maior", "menor", "aumentar", "diminuir"</p>
-                <p><strong>🔊 Leitura:</strong> "ler", "parar", "silêncio"</p>
-                <p><strong>🎯 Foco:</strong> "foco", "concentrar"</p>
-                <p><strong>🖼️ Imagem:</strong> "descrever imagem", "foto"</p>
-                <p><strong>📝 Resumo:</strong> "resumir", "didático"</p>
+                <p><strong>📏 Fonte:</strong> "maior", "aumentar", "menor", "diminuir"</p>
                 <p><strong>🔗 Links:</strong> "destacar links"</p>
-                <p><strong>🤟 Libras:</strong> "libras", "traduzir"</p>
+                <p><strong>🔊 Leitor de texto:</strong> "ler", "ler texto" &middot; para: "parar", "silêncio"</p>
+                <p><strong>👁️ Leitor de tela:</strong> "leitor de tela", "passar mouse"</p>
+                <p><strong>🖼️ Descrever imagem:</strong> "descrever imagem", "foto"</p>
+                <p><strong>🎨 Daltonismo:</strong> "protanopia", "deuteranopia", "tritanopia", "acromatopsia", "sem filtro"</p>
+                <p><strong>🤟 Libras:</strong> "libras", "traduzir" &middot; "pedir libras" &middot; "meus pedidos"</p>
+                <p><strong>📝 Resumo:</strong> "resumir", "didático"</p>
+                <p><strong>🖼️ Imagem do texto:</strong> "gerar imagem", "criar imagem"</p>
+                <p><strong>🎯 Foco:</strong> "foco", "foco sem imagens", "foco com imagens"</p>
+                <p><strong>💬 Assistente:</strong> "assistente", "conversar", "abrir chat"</p>
                 <p><strong>📋 Menu:</strong> "abrir", "fechar"</p>
-                <p><strong>⚙️ Sistema:</strong> "resetar", "desativar voz"</p>
+                <p><strong>⚙️ Sistema:</strong> "resetar", "desativar voz", "fechar ajuda"</p>
+                <p style="margin-top:8px;color:#666;font-size:.9em">Este quadro fecha sozinho assim que você falar um comando.</p>
             </div>
         `);
+        this.voiceHelpModal = this.activeModal;
     }
 
     showVoiceIndicator(show) {

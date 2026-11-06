@@ -11,6 +11,8 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 // 4. Inicializa o Express
 const app = express();
+// Atrás do Caddy (1 proxy): usa o IP real do usuário no limite de uso
+app.set('trust proxy', 1);
 
 // CORS
 app.use(cors({

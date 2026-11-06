@@ -1,0 +1,21 @@
+services:
+  inclua-ai:
+    build: .
+    container_name: inclua-ai
+    restart: unless-stopped
+    env_file: ./servidor/.env
+    environment:
+      PORT: "3100"
+    volumes:
+      # guarda pedidos e vídeos de Libras entre reinícios
+      - inclua-data:/app/servidor/data
+    # Sem "ports": só o Caddy acessa, pela rede "lision-edge" (a mesma do Caddy).
+    networks:
+      - lision-edge
+
+volumes:
+  inclua-data:
+
+networks:
+  lision-edge:
+    external: true

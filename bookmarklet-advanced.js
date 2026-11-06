@@ -11,7 +11,7 @@ javascript:(function(){
     
     // Configuração de servidores (produção e desenvolvimento)
     const servers = [
-        'https://inclua-ai-servidor.onrender.com',
+        'https://inclua.187-41-102-56.sslip.io',
         'http://localhost:3000'
     ];
     

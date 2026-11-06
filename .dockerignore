@@ -1,0 +1,7 @@
+.git
+.dist
+node_modules
+servidor/node_modules
+servidor/.env
+servidor/data
+*.log

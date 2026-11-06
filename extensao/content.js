@@ -9,8 +9,8 @@ if (!window.incluaAIExtensionInjected) {
 
   // Determinar qual URL usar (local ou produção)
   const WIDGET_URL = {
-    css: 'http://localhost:8080/widget.css',
-    js: 'http://localhost:8080/widget.js'
+    css: 'https://inclua.187-41-102-56.sslip.io/widget.css',
+    js: 'https://inclua.187-41-102-56.sslip.io/widget.js'
   };
 
   // Função para injetar o widget
@@ -29,7 +29,7 @@ if (!window.incluaAIExtensionInjected) {
     
     cssLink.onerror = function() {
       console.error('❌ Erro ao carregar CSS do Inclua-AI');
-      // Tenta carregar da produção
+      // Tenta o servidor local (desenvolvimento)
       cssLink.href = 'https://inclua-ai-servidor.onrender.com/widget.css';
     };
     
@@ -42,7 +42,7 @@ if (!window.incluaAIExtensionInjected) {
     
     scriptTag.onerror = function() {
       console.error('❌ Erro ao carregar JavaScript do Inclua-AI');
-      // Tenta carregar da produção
+      // Tenta o servidor local (desenvolvimento)
       scriptTag.src = 'https://inclua-ai-servidor.onrender.com/widget.js';
       document.head.appendChild(scriptTag);
     };

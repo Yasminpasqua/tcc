@@ -15,7 +15,7 @@
   ],
   "host_permissions": [
     "http://localhost:8080/*",
-    "https://inclua-ai-servidor.onrender.com/*",
+    "https://inclua.187-41-102-56.sslip.io/*",
     "<all_urls>"
   ],
   "action": {
