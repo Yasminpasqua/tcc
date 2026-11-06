@@ -61,9 +61,8 @@ Para limpar, use a opção de resetar do widget ou remova a extensão.
 
 ## 🔧 Servidor usado
 
-A extensão tenta carregar o widget, nesta ordem:
-1. **Local**: `http://localhost:8080` (desenvolvimento)
-2. **Produção**: `https://inclua-ai-servidor.onrender.com` (se o local estiver desligado)
+A extensão carrega o widget de **`https://inclua.187-41-102-56.sslip.io`** (servidor de produção).
+Se ele estiver fora do ar, tenta o servidor local `http://localhost:8080` (útil para desenvolvimento).
 
 O widget faz as chamadas de IA (descrição de imagem, resumo etc.) para o mesmo servidor de onde foi carregado.
 
