@@ -1,6 +1,6 @@
-# 🚀 Extensão Inclua-AI para Chrome
+# 🚀 Extensão Inclua-AI para Chrome / Edge
 
-A versão de extensão do Inclua-AI carrega automaticamente em **TODAS** as páginas que você visita. Sem bookmarklets, sem cliques!
+A extensão carrega o widget do Inclua-AI **automaticamente em todas as páginas** que você visita. Sem favorito, sem clicar a cada site, e as configurações que você ativou **continuam valendo ao trocar de página ou de site**.
 
 ## 📦 Arquivos da Extensão
 
@@ -8,107 +8,106 @@ A versão de extensão do Inclua-AI carrega automaticamente em **TODAS** as pág
 extensao/
 ├── manifest.json       # Configuração da extensão
 ├── background.js       # Service worker
-├── content.js          # Script injetado em páginas
-├── popup.html          # UI do popup
-├── popup.js            # Lógica do popup
+├── content.js          # Injeta o widget e guarda as preferências
+├── popup.html / .js    # Popup do ícone da extensão
 ├── welcome.html        # Página de boas-vindas
 └── icons/              # Ícones da extensão
 ```
 
-## ⚙️ Como Instalar em Desenvolvimento (Chrome/Edge)
+---
 
-### Passo 1: Abra o gerenciador de extensões
-- **Chrome**: `chrome://extensions`
-- **Edge**: `edge://extensions`
+## ⚙️ Como instalar (modo desenvolvedor)
 
-### Passo 2: Ative o "Modo de desenvolvedor"
-Clique em "Modo de desenvolvedor" no canto superior direito
+### 1. Inicie o servidor local
+Na raiz do projeto:
 
-### Passo 3: Carregue a extensão
-Clique em "Carregar extensão sem empacotar" e selecione a pasta `extensao/`
+```bash
+cd servidor
+npm install        # só na primeira vez
+node server.js
+```
 
-### Pronto! ✅
-A extensão está instalada e funcionando! O widget aparecerá automaticamente em todas as páginas.
+O servidor sobe em `http://localhost:8080`. Confira em <http://localhost:8080/health> (deve responder `"status":"ok"`).
+
+> Para a **descrição de imagem** funcionar, o arquivo `servidor/.env` precisa ter `GROQ_API_KEY=...` (chave gratuita em <https://console.groq.com/keys>).
+
+### 2. Abra o gerenciador de extensões
+- **Chrome**: digite `chrome://extensions` na barra de endereço
+- **Edge**: digite `edge://extensions`
+
+### 3. Ative o "Modo do desenvolvedor"
+Chave no canto superior direito (Chrome) ou no menu lateral (Edge).
+
+### 4. Carregue a extensão
+Clique em **"Carregar sem compactação"** (Chrome) / **"Carregar descompactada"** (Edge) e selecione a pasta **`extensao/`** deste projeto.
+
+### 5. Pronto ✅
+Abra qualquer site (ou recarregue com `F5`). O ícone do Inclua-AI aparece sozinho na página.
+
+> Dica: clique no ícone de quebra-cabeça 🧩 da barra do navegador e fixe o Inclua-AI para acessá-lo rápido.
+
+### Atualizou o código da extensão?
+Em `chrome://extensions`, clique no botão de **recarregar** (↻) no cartão do Inclua-AI e depois recarregue a página (`F5`).
 
 ---
 
-## 🔧 Configuração
+## 💾 Preferências salvas em todos os sites
 
-### URL do Servidor
+Tudo que a pessoa ativar no widget (tamanho da fonte, filtro de cor, destaque de links etc.) é guardado no `chrome.storage.local` da extensão e restaurado automaticamente em cada página nova, em qualquer site.
 
-A extensão tenta conectar em:
-1. **Primeiro**: `http://localhost:3000` (desenvolvimento local)
-2. **Fallback**: `https://inclua-ai-servidor.onrender.com` (produção)
-
-Se você estiver rodando o servidor local, certifique-se que está em `http://localhost:3000`
+Para limpar, use a opção de resetar do widget ou remova a extensão.
 
 ---
 
-## 📱 Funcionamento
+## 🔧 Servidor usado
 
-### Carregamento Automático
-- Widget é injetado em todas as páginas automaticamente
-- Não precisa de bookmarklet
-- Não precisa clicar toda vez que muda de página
-- Preferências são salvas localmente
+A extensão tenta carregar o widget, nesta ordem:
+1. **Local**: `http://localhost:8080` (desenvolvimento)
+2. **Produção**: `https://inclua-ai-servidor.onrender.com` (se o local estiver desligado)
 
-### Popup da Extensão
-Clique no ícone do Inclua-AI no navegador para:
-- Ativar/desativar o widget
-- Ver status do servidor
-- Acessar configurações
-- Ver ajuda
+O widget faz as chamadas de IA (descrição de imagem, resumo etc.) para o mesmo servidor de onde foi carregado.
 
 ---
 
-## 🐛 Troubleshooting
+## 🐛 Problemas comuns
 
-### Widget não aparece?
-1. Verifique o console do navegador (`F12`)
-2. Certifique-se que o servidor está rodando em `http://localhost:3000`
-3. Recarregue a página (`F5`)
-4. Verifique se a extensão está habilitada em `chrome://extensions`
+### O widget não aparece
+1. Confirme que a extensão está ligada em `chrome://extensions`.
+2. Confirme que o servidor está rodando: <http://localhost:8080/health>.
+3. Recarregue a página (`F5`) e veja o console (`F12`) por erros.
 
-### Erro de CORS?
-A extensão usa `<all_urls>` e CORS já está configurado no servidor
+### "Erro ao descrever imagem"
+- Verifique se `GROQ_API_KEY` está no `servidor/.env` e **reinicie o servidor** depois de alterar.
+- Se estiver usando o servidor do Render, ele precisa estar com o código atualizado.
+- Alguns sites (ex.: Instagram) têm regras de segurança (CSP) que podem bloquear scripts/chamadas para `localhost`. Veja o erro no console (`F12`).
 
-### Widget desaparece ao recarregar página?
-Isso é normal. O script de conteúdo reinjetar automaticamente.
+### Configurações não persistem
+Recarregue a extensão em `chrome://extensions` (↻) e a página. As preferências só são salvas depois que a pessoa muda alguma opção com a extensão carregada.
 
 ---
 
 ## 📝 Publicar na Chrome Web Store
 
-Quando estiver pronto para publicar:
-
-1. Crie ícones profissionais:
-   - 16x16px
-   - 48x48px
-   - 128x128px
-
-2. Empacote a extensão:
+1. Garanta ícones 16x16, 48x48 e 128x128 px.
+2. Empacote:
    ```bash
    cd extensao
    zip -r ../inclua-ai-extension.zip *
    ```
-
-3. Envie para [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore)
+3. Envie no [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
 
 ---
 
 ## 🔐 Privacidade
 
-- Nenhum dado pessoal é coletado
-- Tudo roda localmente no navegador
-- Apenas comunicação com Google Gemini API para IA
-- Preferências salvas em `chrome.storage.local`
+- Nenhum dado pessoal é coletado.
+- Preferências ficam apenas no navegador (`chrome.storage.local`).
+- Imagens e textos enviados para a IA são processados pelo servidor do Inclua-AI e pelo provedor de IA (Groq).
 
 ---
 
 ## 📄 Licença
 
-MIT - Veja LICENSE para detalhes
-
----
+MIT. Veja `LICENSE` para detalhes.
 
 **Desenvolvido com ❤️ para uma web mais acessível**

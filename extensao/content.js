@@ -9,8 +9,8 @@ if (!window.incluaAIExtensionInjected) {
 
   // Determinar qual URL usar (local ou produção)
   const WIDGET_URL = {
-    css: 'http://localhost:3000/widget.css',
-    js: 'http://localhost:3000/widget.js'
+    css: 'http://localhost:8080/widget.css',
+    js: 'http://localhost:8080/widget.js'
   };
 
   // Função para injetar o widget
@@ -62,12 +62,32 @@ if (!window.incluaAIExtensionInjected) {
     document.head.appendChild(scriptTag);
   }
 
-  // Injetar quando o DOM estiver pronto
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectWidget);
-  } else {
-    injectWidget();
+  // Guarda as preferências do widget no storage da extensão (vale para todos os sites)
+  window.addEventListener('message', (event) => {
+    if (event.source !== window) return;
+    const msg = event.data;
+    if (msg && msg.source === 'inclua-ai-widget' && msg.type === 'settings') {
+      chrome.storage.local.set({ incluaAISettings: msg.settings });
+    }
+  });
+
+  // Copia as preferências salvas para o localStorage do site ANTES de carregar o widget,
+  // assim o widget já nasce com tudo que a pessoa ativou antes
+  function start() {
+    chrome.storage.local.get('incluaAISettings', (result) => {
+      try {
+        if (result && result.incluaAISettings) {
+          localStorage.setItem('inclua-ai-settings', JSON.stringify(result.incluaAISettings));
+        }
+      } catch (e) {}
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectWidget);
+      } else {
+        injectWidget();
+      }
+    });
   }
+  start();
 
   // Listen para mensagens do popup
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

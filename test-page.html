@@ -137,7 +137,7 @@
         <div class="instructions">
             <h3>📌 Bookmarklet (Versão LOCAL)</h3>
             <p>Copie e cole isso como URL de um novo bookmark:</p>
-            <div class="code-block" id="bookmarklet">javascript:(function(){if(document.getElementById('inclua-ai-widget')){alert('Inclua-AI já está ativo nesta página!');return;}var css=document.createElement('link');css.rel='stylesheet';css.href='http://localhost:3000/widget.css';document.head.appendChild(css);var script=document.createElement('script');script.src='http://localhost:3000/widget.js';script.onload=function(){console.log('✅ Inclua-AI Widget carregado com sucesso!');};script.onerror=function(){alert('❌ Erro ao carregar Inclua-AI. Verifique se o servidor local está rodando em http://localhost:3000');};document.head.appendChild(script);})();</div>
+            <div class="code-block" id="bookmarklet">javascript:(function(){if(document.getElementById('inclua-ai-widget')){alert('Inclua-AI já está ativo nesta página!');return;}var css=document.createElement('link');css.rel='stylesheet';css.href='http://localhost:8080/widget.css';document.head.appendChild(css);var script=document.createElement('script');script.src='http://localhost:8080/widget.js';script.onload=function(){console.log('✅ Inclua-AI Widget carregado com sucesso!');};script.onerror=function(){alert('❌ Erro ao carregar Inclua-AI. Verifique se o servidor local está rodando em http://localhost:8080');};document.head.appendChild(script);})();</div>
             <button onclick="copiarBookmarklet()">📋 Copiar Bookmarklet</button>
         </div>
 
@@ -185,7 +185,7 @@
 
         <h2>🔧 Teste Técnico</h2>
         <div class="instructions">
-            <p><strong>Seu servidor está rodando em:</strong> <code style="background: #f0f0f0; padding: 5px;">http://localhost:3000</code></p>
+            <p><strong>Seu servidor está rodando em:</strong> <code style="background: #f0f0f0; padding: 5px;">http://localhost:8080</code></p>
             <p><strong>Endpoints disponíveis:</strong></p>
             <ul style="margin-left: 20px;">
                 <li>GET <code style="background: #f0f0f0; padding: 5px;">/health</code> - Status do servidor</li>
@@ -201,7 +201,7 @@
         <div class="instructions">
             <p>📌 <strong>Dica:</strong> Se o widget não aparecer, verifique:</p>
             <ul style="margin-left: 20px;">
-                <li>Se o servidor está rodando em http://localhost:3000</li>
+                <li>Se o servidor está rodando em http://localhost:8080</li>
                 <li>O console do navegador para mensagens de erro</li>
                 <li>Se a chave API do Google Gemini está configurada</li>
             </ul>
@@ -217,13 +217,13 @@
         }
 
         // Verificar se servidor está rodando
-        fetch('http://localhost:3000/health')
+        fetch('http://localhost:8080/health')
             .then(res => res.json())
             .then(data => {
                 console.log('✅ Servidor Inclua-AI está online!', data);
             })
             .catch(err => {
-                console.warn('⚠️ Servidor não respondeu. Verifique se está rodando em http://localhost:3000');
+                console.warn('⚠️ Servidor não respondeu. Verifique se está rodando em http://localhost:8080');
             });
     </script>
 </body>

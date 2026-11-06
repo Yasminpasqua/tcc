@@ -1,562 +1,299 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#3b82f6">
-    <title>Inclua-AI | Assistente de Acessibilidade Inteligente com IA</title>
-    <meta name="description" content="Transforme a acessibilidade do seu site com inteligência artificial. Leitura de texto, descrição de imagens, resumos inteligentes e muito mais.">
-    <meta name="keywords" content="acessibilidade, IA, inclusão digital, leitura de tela, descrição de imagens, WCAG">
-    
-    <!-- Open Graph / Social -->
-    <meta property="og:title" content="Inclua-AI | Acessibilidade Inteligente">
-    <meta property="og:description" content="Solução completa de acessibilidade web com inteligência artificial">
-    <meta property="og:type" content="website">
-
-    <!-- Fonts -->
+    <meta name="theme-color" content="#f7fbff">
+    <title>Inclua-AI | Guia de Acessibilidade com IA</title>
+    <meta name="description" content="Guia completo do Inclua-AI: como instalar, todos os recursos de acessibilidade, atalhos de teclado e comandos de voz.">
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="landing.css">
-
-    <!-- Widget (Self-hosted for demo) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="site.css">
     <link rel="stylesheet" href="widget.css">
 </head>
-
 <body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="container nav">
-            <a href="#" class="logo" aria-label="Inclua-AI - Página inicial">
-                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 7V9C15 11.8 12.8 14 10 14C7.2 14 5 11.8 5 9V7L3 7V9C3 12.9 6.1 16 10 16V18H8V20H16V18H14V16C17.9 16 21 12.9 21 9Z" fill="currentColor"/>
-                </svg>
-                <span>Inclua-AI</span>
-            </a>
-            <button class="mobile-menu-toggle" aria-label="Abrir menu" aria-expanded="false">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <nav class="nav-links" role="navigation">
-                <a href="#features">Recursos</a>
-                <a href="#how-it-works">Como Funciona</a>
-                <a href="#benefits">Benefícios</a>
-                <a href="https://github.com/GabrielRibeiroRodrigues/Inclua-AI" target="_blank" rel="noopener noreferrer">
-                    <svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                    </svg>
-                    GitHub
-                </a>
-            </nav>
-            <div class="header-actions">
-                <button class="btn btn-outline btn-sm" onclick="window.open('test.html', '_blank')">
-                    Ver Demo
-                </button>
+    <header class="hero">
+        <div class="container hero-inner">
+            <img class="hero-logo" src="logo.png" alt="Símbolo universal de acessibilidade, uma figura humana dentro de um círculo" width="96" height="96">
+            <p class="eyebrow">Guia do Inclua-AI</p>
+            <h1>Acessibilidade na web, <span>com ajuda de IA</span></h1>
+            <p class="lead">O Inclua-AI adiciona a qualquer página recursos para leitura em voz alta, descrição de imagens, resumos, tradução para Libras e modos de foco. Esta página explica cada recurso e como usá-lo.</p>
+            <p class="hint">O botão azul no canto da tela é o próprio Inclua-AI. Abra-o para usar nesta página tudo o que está descrito aqui.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="#instalar">Como instalar</a>
+                <a class="btn btn-ghost" href="#recursos">Ver recursos</a>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-background">
-            <div class="hero-gradient"></div>
-            <div class="hero-pattern"></div>
+    <main id="conteudo" tabindex="-1">
+
+        <section class="section" id="instalar" aria-labelledby="t-instalar">
+            <div class="container">
+                <div class="section-head">
+                    <p class="eyebrow">Passo a passo</p>
+                    <h2 id="t-instalar">Como instalar</h2>
+                    <p>Escolha como usar o Inclua-AI: por favorito, sem instalar nada, ou pela extensão, que ativa sozinha em todas as páginas.</p>
+                </div>
+                <ol class="install">
+                    <li class="install-card">
+                        <h3>Favorito (bookmarklet)</h3>
+                        <p>Sem instalar nada. Você guarda o Inclua-AI na barra de favoritos e ativa em qualquer página com um clique.</p>
+                        <ol class="mini-steps">
+                            <li>Arraste o botão abaixo até a barra de favoritos do navegador. Para exibi-la, use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd>.</li>
+                            <li>Em qualquer site, clique no favorito <strong>Inclua-AI</strong>. O botão de acessibilidade aparece na tela.</li>
+                        </ol>
+                        <a id="bookmarklet-link" class="btn btn-primary btn-drag" href="#" draggable="true" title="Arraste para a barra de favoritos">Inclua-AI</a>
+                        <p class="drag-hint">Clicar aqui não instala. É preciso arrastar. Não conseguiu? <button type="button" class="link-btn" onclick="copyBookmarklet()">Copie o código</button> e cole como endereço de um novo favorito.</p>
+                    </li>
+                    <li class="install-card">
+                        <h3>Extensão (Chrome e Edge)</h3>
+                        <p>Fica ativa em todas as páginas sozinha, sem precisar clicar a cada site. As opções que você ligou continuam valendo ao trocar de página.</p>
+                        <ol class="mini-steps">
+                            <li>Baixe ou clone o projeto e deixe o servidor rodando: na pasta <code>servidor</code>, execute <code>node server.js</code>.</li>
+                            <li>Abra <code>chrome://extensions</code> (no Edge, <code>edge://extensions</code>) e ative o <strong>Modo do desenvolvedor</strong>.</li>
+                            <li>Clique em <strong>Carregar sem compactação</strong> e escolha a pasta <code>extensao</code> do projeto.</li>
+                            <li>Abra qualquer site. O botão de acessibilidade aparece sozinho. Se não aparecer, recarregue a página com <kbd>F5</kbd>.</li>
+                        </ol>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="section section-tint" id="usar" aria-labelledby="t-usar">
+            <div class="container">
+                <div class="section-head">
+                    <p class="eyebrow">Primeiros passos</p>
+                    <h2 id="t-usar">Como usar</h2>
+                </div>
+                <ol class="usage">
+                    <li><strong>Abra o painel.</strong> Clique no botão circular no canto inferior direito da tela, ou navegue até ele com o teclado e aperte Enter.</li>
+                    <li><strong>Ative um recurso.</strong> Cada card do painel funciona como um interruptor, com o estado <em>ON</em> ou <em>OFF</em>. Os cards também podem ser ativados com Enter.</li>
+                    <li><strong>Use na página.</strong> Selecione um texto, passe o mouse ou clique em uma imagem, conforme o recurso.</li>
+                    <li><strong>Suas escolhas ficam salvas.</strong> O widget lembra as configurações na próxima visita. Para limpar tudo, use <em>Resetar configurações</em> no fim do painel.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="section" id="recursos" aria-labelledby="t-recursos">
+            <div class="container">
+                <div class="section-head">
+                    <p class="eyebrow">Tudo que o widget faz</p>
+                    <h2 id="t-recursos">Recursos</h2>
+                    <p>Organizados por necessidade. Onde houver, o atalho de teclado aparece no card.</p>
+                </div>
+                
+      <section class="category tone-sky" aria-labelledby="cat-visual">
+        <div class="category-head">
+          <h3 id="cat-visual">Deficiência visual</h3>
+          <p>Recursos para quem enxerga pouco, tem baixa visão ou não enxerga.</p>
         </div>
-        <div class="container hero-content">
-            <div class="hero-badge">
-                <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                </svg>
-                <span>Tecnologia de IA Avançada</span>
-            </div>
-            <h1>Acessibilidade Web <br><span class="gradient-text">com Inteligência Artificial</span></h1>
-            <p class="hero-subtitle">
-                Transforme seu site em uma experiência inclusiva para todos. <strong>Leitura inteligente, descrição de imagens por IA, resumos automáticos</strong> e recursos de acessibilidade avançados em poucos cliques.
-            </p>
-            <div class="hero-actions">
-                <button class="btn btn-primary btn-lg" onclick="window.open('test.html', '_blank')" aria-label="Experimentar demonstração interativa do Inclua-AI">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
-                    <span>Ver Demonstração</span>
-                </button>
-                <button class="btn btn-secondary btn-lg" onclick="copyBookmarklet()" aria-label="Instalar widget de acessibilidade">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    <span>Instalar Agora</span>
-                </button>
-            </div>
-            <p class="hero-trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;"><polyline points="20 6 9 17 4 12"/></svg>Teste gratuito por 30 dias • Sem cartão de crédito</p>
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <div class="stat-value">30 dias</div>
-                    <div class="stat-label">Teste Grátis</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">&lt; 2min</div>
-                    <div class="stat-label">Instalação</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">10+</div>
-                    <div class="stat-label">Recursos IA</div>
-                </div>
-            </div>
+        <ul class="cards">
+          <li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19 9 5l6 14"/><path d="M5 15h8"/><path d="M19 8v6M16 11h6"/></svg></span>
+              <h4>Aumentar fonte</h4>
+              <p>Amplia o tamanho do texto de toda a página, a cada clique, sem quebrar o layout.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19 9 5l6 14"/><path d="M5 15h8"/><path d="M16 11h6"/></svg></span>
+              <h4>Diminuir fonte</h4>
+              <p>Reduz o texto para voltar a um tamanho confortável.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>G</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+              <h4>Destacar links</h4>
+              <p>Realça todos os links da página com a cor que você escolher: amarelo, ciano, vermelho, verde, laranja, roxo ou branco.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19 5a10 10 0 0 1 0 14"/></svg></span>
+              <h4>Leitor de texto</h4>
+              <p>Selecione qualquer trecho da página e ele é lido em voz alta, em português.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <h4>Leitor de tela</h4>
+              <p>Passe o mouse sobre um elemento e o conteúdo dele é lido automaticamente.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>
+              <h4>Descrever imagem</h4>
+              <p>Clique em uma imagem e a IA gera uma descrição acessível em português, útil onde não há texto alternativo.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 1 0 0 20 2 2 0 0 0 2-2c0-.6-.3-1.1-.6-1.5-.4-.4-.6-.9-.6-1.5a2 2 0 0 1 2-2H17a5 5 0 0 0 5-5c0-4.4-4.5-8-10-8z"/></svg></span>
+              <h4>Filtros de daltonismo</h4>
+              <p>Corrige as cores da página para protanopia, deuteranopia, tritanopia e acromatopsia.</p>
+              
+            </li>
+        </ul>
+      </section>
+      <section class="category tone-mint" aria-labelledby="cat-auditiva">
+        <div class="category-head">
+          <h3 id="cat-auditiva">Deficiência auditiva</h3>
+          <p>Apoio para quem tem a Língua Brasileira de Sinais como primeira língua.</p>
         </div>
-    </section>
-
-    <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Recursos Poderosos</span>
-                <h2>Tudo que você precisa para <br>uma web mais inclusiva</h2>
-                <p class="section-description">Ferramentas inteligentes que transformam a experiência de navegação</p>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon-bg"></div>
-                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                            <line x1="12" x2="12" y1="19" y2="22"/>
-                        </svg>
-                    </div>
-                    <h3>Leitor de Texto com IA</h3>
-                    <p>Voz natural em português que lê qualquer conteúdo da página. Perfeito para pessoas com deficiência visual, dislexia ou que preferem conteúdo em áudio.</p>
-                    <ul class="feature-list">
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Múltiplas vozes disponíveis</span>
-                        </li>
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Controle de velocidade</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon-bg"></div>
-                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-                            <circle cx="9" cy="9" r="2"/>
-                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                        </svg>
-                    </div>
-                    <h3>Descrição Automática de Imagens</h3>
-                    <p>Nossa IA analisa e descreve imagens automaticamente em tempo real. Nenhum conteúdo visual fica inacessível.</p>
-                    <ul class="feature-list">
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Descrições contextuais detalhadas</span>
-                        </li>
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Geração automática de alt-text</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon-bg"></div>
-                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                            <line x1="16" x2="8" y1="13" y2="13"/>
-                            <line x1="16" x2="8" y1="17" y2="17"/>
-                            <polyline points="10 9 9 9 8 9"/>
-                        </svg>
-                    </div>
-                    <h3>Resumos Inteligentes</h3>
-                    <p>Transforme textos longos em resumos claros e objetivos. Economize tempo e facilite a compreensão de conteúdos complexos.</p>
-                    <ul class="feature-list">
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Processamento até 5.000 caracteres</span>
-                        </li>
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Linguagem simplificada</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon-bg"></div>
-                        <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 20h9"/>
-                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-                        </svg>
-                    </div>
-                    <h3>Personalização Completa</h3>
-                    <p>Ajuste fonte, contraste, espaçamento e cores. Inclui filtros para daltonismo e modo escuro. Cada usuário cria sua experiência ideal.</p>
-                    <ul class="feature-list">
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Modo escuro inteligente</span>
-                        </li>
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            <span>Filtros para daltonismo</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+        <ul class="cards">
+          <li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a6 6 0 0 0-12 0v5"/><path d="M2 16s2-4 10-4 10 4 10 4"/><path d="M8 16v5"/><path d="M16 16v5"/></svg></span>
+              <h4>Traduzir para Libras</h4>
+              <p>Converte o texto em glosa de Libras, a escrita dos sinais na ordem gramatical da língua. Passe o mouse sobre um texto para ver.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd></p>
+            </li>
+        </ul>
+      </section>
+      <section class="category tone-lilac" aria-labelledby="cat-cognitiva">
+        <div class="category-head">
+          <h3 id="cat-cognitiva">Dificuldades cognitivas</h3>
+          <p>Menos distração e textos mais fáceis de entender, para TDAH, dislexia e outras necessidades.</p>
         </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section id="how-it-works" class="steps">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Fácil e Rápido</span>
-                <h2>Como Começar</h2>
-                <p class="section-description">Integre o Inclua-AI em segundos, sem complicações</p>
-            </div>
-
-            <div class="steps-grid">
-                <div class="step-item" data-aos="fade-right">
-                    <div class="step-number">
-                        <span>01</span>
-                        <div class="step-line"></div>
-                    </div>
-                    <div class="step-content">
-                        <h3>Experimente Agora</h3>
-                        <p>Clique no botão de demonstração para ver o widget em ação nesta mesma página ou em nossa página de teste dedicada.</p>
-                        <button class="btn btn-outline btn-sm" onclick="window.open('test.html', '_blank')">
-                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                                <polyline points="10 17 15 12 10 7"/>
-                                <line x1="15" x2="3" y1="12" y2="12"/>
-                            </svg>
-                            Abrir Demo
-                        </button>
-                    </div>
-                </div>
-
-                <div class="step-item" data-aos="fade-right" data-aos-delay="100">
-                    <div class="step-number">
-                        <span>02</span>
-                        <div class="step-line"></div>
-                    </div>
-                    <div class="step-content">
-                        <h3>Use o Bookmarklet</h3>
-                        <p>Arraste o botão abaixo para sua barra de favoritos ou clique para copiar o código e ativar o widget em qualquer site.</p>
-                        <div class="bookmarklet-wrapper">
-                            <a href="javascript:(function(){if(document.getElementById('inclua-ai-widget'))return;const c=document.createElement('link');c.rel='stylesheet';c.href='http://localhost:8080/widget.css';document.head.appendChild(c);const s=document.createElement('script');s.src='http://localhost:8080/widget.js';document.head.appendChild(s);})();"
-                                class="btn btn-bookmarklet" onclick="event.preventDefault(); copyBookmarklet()">
-                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                                </svg>
-                                Inclua-AI Widget
-                            </a>
-                            <span class="bookmarklet-hint">↑ Arraste para favoritos ou clique para copiar</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="step-item" data-aos="fade-right" data-aos-delay="200">
-                    <div class="step-number">
-                        <span>03</span>
-                    </div>
-                    <div class="step-content">
-                        <h3>Para Desenvolvedores</h3>
-                        <p>Adicione o script diretamente no seu site para oferecer acessibilidade avançada a todos os seus visitantes automaticamente.</p>
-                        <div class="code-block">
-                            <div class="code-header">
-                                <span class="code-language">HTML</span>
-                                <button class="code-copy" onclick="navigator.clipboard.writeText('<link rel=&quot;stylesheet&quot; href=&quot;https://seu-dominio.com/widget.css&quot;>\n<script src=&quot;https://seu-dominio.com/widget.js&quot;><\/script>'); this.innerHTML='<svg class=&quot;btn-icon&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;><polyline points=&quot;20 6 9 17 4 12&quot;/></svg> Copiado!'; setTimeout(() => this.innerHTML='<svg class=&quot;btn-icon&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot;><rect width=&quot;14&quot; height=&quot;14&quot; x=&quot;8&quot; y=&quot;8&quot; rx=&quot;2&quot; ry=&quot;2&quot;/><path d=&quot;M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2&quot;/></svg> Copiar', 2000)">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                                    </svg>
-                                    Copiar
-                                </button>
-                            </div>
-                            <pre><code>&lt;link rel="stylesheet" href="widget.css"&gt;
-&lt;script src="widget.js"&gt;&lt;/script&gt;</code></pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <ul class="cards">
+          <li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 11h7"/></svg></span>
+              <h4>Resumo didático</h4>
+              <p>Reorganiza o texto em tópicos numerados, do básico ao avançado, com um conceito-chave no final.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8"/></svg></span>
+              <h4>Resumir texto</h4>
+              <p>Selecione um trecho e receba um resumo curto, de até três frases.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <h4>Foco</h4>
+              <p>Escurece a página e ilumina só o bloco de texto sob o mouse. Imagens ficam como estão.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg></span>
+              <h4>Foco sem imagens</h4>
+              <p>Igual ao Foco, mas esconde as imagens para deixar só o texto.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd></p>
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><rect x="8" y="9" width="8" height="6" rx="1"/></svg></span>
+              <h4>Foco com imagens</h4>
+              <p>Ilumina apenas as imagens e vídeos quando o mouse passa sobre eles.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd></p>
+            </li>
+        </ul>
+      </section>
+      <section class="category tone-peach" aria-labelledby="cat-assist">
+        <div class="category-head">
+          <h3 id="cat-assist">Assistência virtual</h3>
+          <p>Ajuda para tirar dúvidas e navegar, por texto ou por voz.</p>
         </div>
-    </section>
+        <ul class="cards">
+          <li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 10h.01M15 10h.01"/><path d="M9 14s1 2 3 2 3-2 3-2"/></svg></span>
+              <h4>ChatBot assistente</h4>
+              <p>Converse com uma IA que responde dúvidas sobre a página e sobre o uso do widget.</p>
+              
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+              <h4>Central de atendimento</h4>
+              <p>Atendimento por voz: você fala e ouve a resposta.</p>
+              
+            </li><li class="card">
+              <span class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></span>
+              <h4>Controle por voz</h4>
+              <p>Ative e desative recursos falando comandos, sem usar mouse nem teclado.</p>
+              <p class="shortcut"><span class="sr-only">Atalho: </span><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></p>
+            </li>
+        </ul>
+      </section>
+            </div>
+        </section>
 
-    <!-- Benefits Section -->
-    <section id="benefits" class="benefits">
-        <div class="container">
-            <div class="benefits-content">
-                <div class="benefits-text" data-aos="fade-right">
-                    <span class="section-badge">Por que escolher Inclua-AI?</span>
-                    <h2>Acessibilidade que faz <br>a diferença</h2>
-                    <p class="benefits-description">
-                        Mais de 1 bilhão de pessoas no mundo vivem com alguma forma de deficiência. 
-                        O Inclua-AI democratiza o acesso à informação digital com tecnologia de ponta.
-                    </p>
-                    <ul class="benefits-list">
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                            <div>
-                                <strong>1 Mês Gratuito</strong>
-                                <span>Experimente todos os recursos sem compromisso</span>
-                            </div>
-                        </li>
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                            <div>
-                                <strong>Conformidade WCAG 2.1</strong>
-                                <span>Atende às diretrizes internacionais de acessibilidade</span>
-                            </div>
-                        </li>
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                            <div>
-                                <strong>Privacidade Garantida</strong>
-                                <span>Processamento seguro sem armazenamento de dados</span>
-                            </div>
-                        </li>
-                        <li>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                            <div>
-                                <strong>Sem Instalação</strong>
-                                <span>Funciona diretamente no navegador</span>
-                            </div>
-                        </li>
-                    </ul>
+        <section class="section section-tint" id="atalhos" aria-labelledby="t-atalhos">
+            <div class="container narrow">
+                <div class="section-head">
+                    <p class="eyebrow">Sem mouse</p>
+                    <h2 id="t-atalhos">Atalhos de teclado</h2>
+                    <p>Todos começam com <kbd>Alt</kbd> + <kbd>Shift</kbd>.</p>
                 </div>
-                <div class="benefits-visual" data-aos="fade-left">
-                    <div class="visual-card">
-                        <div class="visual-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                <circle cx="9" cy="7" r="4"/>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                            </svg>
-                        </div>
-                        <div class="visual-stat">1B+</div>
-                        <div class="visual-label">Pessoas com deficiência no mundo</div>
-                    </div>
-                    <div class="visual-card">
-                        <div class="visual-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                            </svg>
-                        </div>
-                        <div class="visual-stat">96%</div>
-                        <div class="visual-label">Sites ainda não são acessíveis</div>
-                    </div>
+                <div class="table-wrap">
+                    <table>
+                        <caption class="sr-only">Atalhos de teclado do Inclua-AI</caption>
+                        <thead><tr><th scope="col">Recurso</th><th scope="col">Atalho</th></tr></thead>
+                        <tbody><tr><th scope="row">Aumentar fonte</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></td></tr><tr><th scope="row">Diminuir fonte</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>G</kbd></td></tr><tr><th scope="row">Destacar links</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd></td></tr><tr><th scope="row">Leitor de texto</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd></td></tr><tr><th scope="row">Leitor de tela</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>E</kbd></td></tr><tr><th scope="row">Descrever imagem</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd></td></tr><tr><th scope="row">Traduzir para Libras</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd></td></tr><tr><th scope="row">Resumo didático</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd></td></tr><tr><th scope="row">Resumir texto</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td></tr><tr><th scope="row">Foco</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd></td></tr><tr><th scope="row">Foco sem imagens</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd></td></tr><tr><th scope="row">Foco com imagens</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd></td></tr><tr><th scope="row">Controle por voz</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></td></tr><tr><th scope="row">Ajuda com todos os atalhos</th><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>?</kbd></td></tr></tbody>
+                    </table>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <a href="#" class="logo">
-                        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 7V9C15 11.8 12.8 14 10 14C7.2 14 5 11.8 5 9V7L3 7V9C3 12.9 6.1 16 10 16V18H8V20H16V18H14V16C17.9 16 21 12.9 21 9Z" fill="currentColor"/>
-                        </svg>
-                        <span>Inclua-AI</span>
-                    </a>
-                    <p class="footer-description">
-                        Transformando a web em um espaço verdadeiramente inclusivo para todos.
-                    </p>
-                    <div class="footer-social">
-                        <a href="https://github.com/GabrielRibeiroRodrigues/Inclua-AI" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                            </svg>
-                        </a>
-                    </div>
+        <section class="section" id="voz" aria-labelledby="t-voz">
+            <div class="container narrow">
+                <div class="section-head">
+                    <p class="eyebrow">Mãos livres</p>
+                    <h2 id="t-voz">Comandos de voz</h2>
+                    <p>Ative o <em>Controle por voz</em> (<kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd>) e permita o uso do microfone. Depois é só falar.</p>
                 </div>
-                <div class="footer-links-grid">
-                    <div class="footer-column">
-                        <h4>Produto</h4>
-                        <a href="#features">Recursos</a>
-                        <a href="#how-it-works">Como Funciona</a>
-                        <a href="test.html" target="_blank">Demo</a>
-                        <a href="DOCUMENTATION.md" target="_blank">Documentação</a>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Recursos</h4>
-                        <a href="https://github.com/GabrielRibeiroRodrigues/Inclua-AI" target="_blank">GitHub</a>
-                        <a href="README.md" target="_blank">README</a>
-                        <a href="#" onclick="copyBookmarklet(); return false;">Bookmarklet</a>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Informações</h4>
-                        <a href="#benefits">Sobre</a>
-                        <a href="LICENSE" target="_blank">Licença</a>
-                        <a href="#" onclick="alert('Entre em contato via GitHub Issues'); return false;">Contato</a>
-                    </div>
-                </div>
+                <ul class="chips">
+                    <li>“maior” / “menor”</li>
+                    <li>“ler texto”</li>
+                    <li>“parar leitura”</li>
+                    <li>“passar mouse”</li>
+                    <li>“foco”</li>
+                    <li>“foco sem imagens”</li>
+                    <li>“foco com imagens”</li>
+                    <li>“destacar links”</li>
+                    <li>“descrever imagem”</li>
+                    <li>“resumir”</li>
+                    <li>“didático”</li>
+                </ul>
+                <p class="note">O reconhecimento de voz depende do navegador. Ele funciona melhor no Chrome e no Edge.</p>
             </div>
-            <div class="footer-bottom">
-                <p class="copyright">© 2024-2026 Inclua-AI.</p>
-                <p class="footer-credits">Powered by <strong>Inteligência Artificial</strong></p>
-            </div>
-        </div>
-    </footer>
+        </section>
 
-    <!-- Scripts -->
+        <section class="section section-tint" id="detalhes" aria-labelledby="t-detalhes">
+            <div class="container narrow">
+                <div class="section-head">
+                    <p class="eyebrow">Bom saber</p>
+                    <h2 id="t-detalhes">Especificações e limites</h2>
+                </div>
+                <dl class="specs">
+                    <div><dt>Resumo de texto</dt><dd>de 50 a 10.000 caracteres</dd></div>
+                    <div><dt>Tradução para Libras</dt><dd>de 5 a 500 caracteres</dd></div>
+                    <div><dt>Descrição de imagem</dt><dd>imagens de até 4 MB</dd></div>
+                    <div><dt>Limite de uso</dt><dd>20 pedidos por minuto por usuário</dd></div>
+                    <div><dt>Resumos e Libras</dt><dd>IA gratuita, sem cadastro nem chave de acesso</dd></div>
+                    <div><dt>Descrição de imagem</dt><dd>exige uma chave do Groq configurada no servidor</dd></div>
+                </dl>
+                <p class="note">As configurações ficam salvas no seu navegador. Os textos e imagens enviados à IA são usados só para gerar a resposta.</p>
+            </div>
+        </section>
+    </main>
+
+
     <script src="widget.js"></script>
     <script>
-        // Mobile menu toggle
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileToggle = document.querySelector('.mobile-menu-toggle');
-            const navLinks = document.querySelector('.nav-links');
-            
-            if (mobileToggle) {
-                mobileToggle.addEventListener('click', function() {
-                    const isExpanded = this.getAttribute('aria-expanded') === 'true';
-                    this.setAttribute('aria-expanded', !isExpanded);
-                    navLinks.classList.toggle('active');
-                    document.body.classList.toggle('menu-open');
-                });
-            }
-
-            // Smooth scroll for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    const href = this.getAttribute('href');
-                    if (href === '#' || href === '#!') return;
-                    
-                    e.preventDefault();
-                    const target = document.querySelector(href);
-                    if (target) {
-                        const offset = 80;
-                        const targetPosition = target.offsetTop - offset;
-                        window.scrollTo({
-                            top: targetPosition,
-                            behavior: 'smooth'
-                        });
-                        
-                        // Close mobile menu if open
-                        if (navLinks.classList.contains('active')) {
-                            navLinks.classList.remove('active');
-                            mobileToggle.setAttribute('aria-expanded', 'false');
-                            document.body.classList.remove('menu-open');
-                        }
-                    }
-                });
-            });
-
-            // Add scroll effect to header
-            let lastScroll = 0;
-            const header = document.querySelector('.header');
-            
-            window.addEventListener('scroll', () => {
-                const currentScroll = window.pageYOffset;
-                
-                if (currentScroll > 100) {
-                    header.classList.add('scrolled');
-                } else {
-                    header.classList.remove('scrolled');
-                }
-                
-                lastScroll = currentScroll;
-            });
-
-            // Simple AOS-like animation on scroll
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('aos-animate');
-                    }
-                });
-            }, observerOptions);
-
-            document.querySelectorAll('[data-aos]').forEach(el => {
-                observer.observe(el);
-            });
-        });
-
-        function copyBookmarklet() {
-            const origin = window.location.origin;
-            const bookmarklet = `javascript:(function(){
-                if(document.getElementById('inclua-ai-widget')) return;
-                const css = document.createElement('link');
-                css.rel = 'stylesheet';
-                css.href = '${origin}/widget.css';
-                document.head.appendChild(css);
-                const script = document.createElement('script');
-                script.src = '${origin}/widget.js';
-                document.head.appendChild(script);
-            })();`;
-
-            navigator.clipboard.writeText(bookmarklet).then(() => {
-                // Create toast notification
-                const toast = document.createElement('div');
-                toast.className = 'copy-toast';
-                toast.innerHTML = `
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    <span>Código copiado! Crie um favorito e cole na URL.</span>
-                `;
-                document.body.appendChild(toast);
-                
-                setTimeout(() => toast.classList.add('show'), 10);
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 300);
-                }, 4000);
-            }).catch(() => {
-                prompt('Copie este código:', bookmarklet);
-            });
+        function notify(msg) {
+            const t = document.createElement('div');
+            t.className = 'copy-toast';
+            t.setAttribute('role', 'status');
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.classList.add('show'), 10);
+            setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3500);
         }
+        function copyText(text, msg) {
+            navigator.clipboard.writeText(text).then(() => notify(msg)).catch(() => prompt('Copie este código:', text));
+        }
+        function bookmarkletCode() {
+            const origin = window.location.origin;
+            return "javascript:(function(){if(document.getElementById('inclua-ai-widget'))return;var c=document.createElement('link');c.rel='stylesheet';c.href='" + origin + "/widget.css';document.head.appendChild(c);var s=document.createElement('script');s.src='" + origin + "/widget.js';document.head.appendChild(s);})();";
+        }
+        function copyBookmarklet() {
+            copyText(bookmarkletCode(), 'Código copiado. Crie um favorito e cole no endereço.');
+        }
+        const bmLink = document.getElementById('bookmarklet-link');
+        bmLink.setAttribute('href', bookmarkletCode());
+        bmLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            notify('Arraste este botão até a barra de favoritos.');
+        });
     </script>
 </body>
-
 </html>

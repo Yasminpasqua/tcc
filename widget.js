@@ -4,6 +4,12 @@
  * Arquitetura robusta, acessível e resiliente.
  */
 
+// Origem de onde este script foi carregado (ex.: http://localhost:8080 ao usar o favorito local)
+const INCLUA_SCRIPT_ORIGIN = (() => {
+    try { return document.currentScript && document.currentScript.src ? new URL(document.currentScript.src).origin : null; }
+    catch { return null; }
+})();
+
 class IncluaAIWidget {
     constructor() {
         this.isActive = false;
@@ -20,6 +26,7 @@ class IncluaAIWidget {
             fontSize: 0,
             colorFilter: 'none',
             highlightLinks: false,
+            highlightLinksColor: '#ffff00',
 
             // Assistente de Leitura
             textReader: false,
@@ -29,13 +36,20 @@ class IncluaAIWidget {
             imageDescriber: false,
             textSummarizer: false,
             didacticSummary: false,
+            didacticStyle: 'topicos',
+            textToImage: false,
+            chatSpeak: true,
 
             // Libras
             librasHover: false,
+            librasRequest: false,
+            librasRequests: [],
 
             // Novas funcionalidades
             voiceCommands: false,
-            focusMode: false
+            focusMode: false,
+            focusModeImages: false,
+            focusModePlain: false
         };
 
         this.currentSpeech = null;
@@ -61,6 +75,13 @@ class IncluaAIWidget {
         this.boundHandleImageClick = this.handleImageClick.bind(this);
         this.boundHandleTextSummarization = this.handleTextSummarization.bind(this);
         this.boundHandleHover = this.handleHover.bind(this);
+        // Evita repetir o resumo/imagem em loop enquanto o mesmo texto continua selecionado
+        this.lastSelectionHandled = '';
+        // Avisa se algum pedido de Libras ficou pronto desde a última visita
+        setTimeout(() => this.checkLibrasReady(), 4000);
+        document.addEventListener('selectionchange', () => {
+            if (!window.getSelection().toString().trim()) this.lastSelectionHandled = '';
+        });
         this.boundHandleHoverOut = this.handleHoverOut.bind(this);
         this.hoverTimeout = null;
 
@@ -154,8 +175,9 @@ class IncluaAIWidget {
     }
 
     getApiBaseUrl() {
+        if (INCLUA_SCRIPT_ORIGIN) return INCLUA_SCRIPT_ORIGIN;
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return 'http://localhost:3000';
+            return 'http://localhost:8080';
         }
         return 'https://inclua-ai-servidor.onrender.com';
     }
@@ -170,8 +192,15 @@ class IncluaAIWidget {
                 <div class="toast-container" id="inclua-ai-toasts"></div>
                 
                 <button id="inclua-ai-toggle" aria-label="Abrir assistente de acessibilidade" aria-expanded="false" aria-controls="inclua-ai-panel">
-                    <svg id="inclua-ai-toggle-icon" viewBox="0 0 24 24">
-                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 7V9C15 11.8 12.8 14 10 14C7.2 14 5 11.8 5 9V7L3 7V9C3 12.9 6.1 16 10 16V18H8V20H16V18H14V16C17.9 16 21 12.9 21 9Z"/>
+                    <svg id="inclua-ai-toggle-icon" viewBox="0 0 100 100" style="width: 50px; height: 50px; margin: auto;">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#000" stroke-width="5"/>
+                        <circle cx="50" cy="27" r="10" fill="#00E5FF" stroke="#000" stroke-width="5"/>
+                        <path d="M 12 40 Q 50 75 88 40" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"/>
+                        <path d="M 50 55 L 30 85 M 50 55 L 70 85" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="40" r="4" fill="#00E5FF" stroke="#000" stroke-width="5"/>
+                        <circle cx="88" cy="40" r="4" fill="#00E5FF" stroke="#000" stroke-width="5"/>
+                        <circle cx="30" cy="85" r="4" fill="#00E5FF" stroke="#000" stroke-width="5"/>
+                        <circle cx="70" cy="85" r="4" fill="#00E5FF" stroke="#000" stroke-width="5"/>
                     </svg>
                 </button>
                 
@@ -195,12 +224,12 @@ class IncluaAIWidget {
     createPanelSections() {
         return `
             ${this.createCategory('visual', '', 'Deficiência Visual', '#3b82f6', [
-            { id: 'font-increase', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="14" font-weight="bold">A+</text></svg>', title: 'Aumentar Fonte', desc: 'Fonte maior', key: 'F2' },
-            { id: 'font-decrease', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="14" font-weight="bold">A-</text></svg>', title: 'Diminuir Fonte', desc: 'Fonte menor', key: 'F3' },
-            { id: 'highlight-links', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', title: 'Destacar Links', desc: 'Realce em links', key: 'F9' },
-            { id: 'text-reader', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>', title: 'Leitor de Texto', desc: 'Selecione para ouvir', key: 'F4' },
-            { id: 'hover-reader', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', title: 'Leitor de Tela', desc: 'Passe o mouse para ouvir', key: 'F5' },
-            { id: 'describe-image', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>', title: 'Descrever Imagem', desc: 'IA descreve imagens', key: 'F6' }
+            { id: 'font-increase', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="14" font-weight="bold">A+</text></svg>', title: 'Aumentar Fonte', desc: 'Fonte maior', key: 'Alt+Shift+F' },
+            { id: 'font-decrease', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="14" font-weight="bold">A-</text></svg>', title: 'Diminuir Fonte', desc: 'Fonte menor', key: 'Alt+Shift+G' },
+            { id: 'highlight-links', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', title: 'Destacar Links', desc: 'Realce em links', key: 'Alt+Shift+L', colorSelect: [{value:'#ffff00',label:'🟡 Amarelo'},{value:'#00eaff',label:'🔵 Ciano'},{value:'#ff6b6b',label:'🔴 Vermelho'},{value:'#69ff69',label:'🟢 Verde'},{value:'#ff9f43',label:'🟠 Laranja'},{value:'#a29bfe',label:'🟣 Roxo'},{value:'#ffffff',label:'⚪ Branco'}] },
+            { id: 'text-reader', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>', title: 'Leitor de Texto', desc: 'Selecione para ouvir', key: 'Alt+Shift+R' },
+            { id: 'hover-reader', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>', title: 'Leitor de Tela', desc: 'Passe o mouse para ouvir', key: 'Alt+Shift+E' },
+            { id: 'describe-image', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>', title: 'Descrever Imagem', desc: 'IA descreve imagens', key: 'Alt+Shift+I' }
         ])}
 
             <div class="category-colorblind">
@@ -214,19 +243,24 @@ class IncluaAIWidget {
                 </select>
             </div>
 
-            ${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
-            { id: 'libras-hover', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a6 6 0 0 0-12 0v5"/><path d="M2 16s2-4 10-4 10 4 10 4"/><path d="M8 16v5"/><path d="M16 16v5"/></svg>', title: 'Traduzir Libras', desc: 'Conversão em Libras', key: 'F8' }
+
+${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
+            { id: 'libras-hover', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a6 6 0 0 0-12 0v5"/><path d="M2 16s2-4 10-4 10 4 10 4"/><path d="M8 16v5"/><path d="M16 16v5"/></svg>', title: 'Traduzir Libras', desc: 'Avatar traduz ao passar o mouse', key: 'Alt+Shift+B' },
+            { id: 'libras-request', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 8v5"/><path d="M9.5 10.5L12 8l2.5 2.5"/></svg>', title: 'Libras por Pedido', desc: 'Pedir tradução de um texto', key: 'Alt+Shift+P' },
+            { id: 'libras-my-requests', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z"/></svg>', title: 'Meus Pedidos de Libras', desc: 'Ver vídeos prontos', key: 'Alt+Shift+Q' }
         ])}
 
             ${this.createCategory('cognitiva', '', 'Dificuldades Cognitivas', '#8b5cf6', [
-            { id: 'didactic-summary', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>', title: 'Resumo Didático', desc: 'Texto educacional', key: 'F10' },
-            { id: 'summarize-text', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/></svg>', title: 'Resumir Texto', desc: 'Resumo rápido', key: 'F7' },
-            { id: 'focus-mode', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>', title: 'Modo Foco', desc: 'Destaca conteúdo', key: 'F11' }
+            { id: 'didactic-summary', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/></svg>', title: 'Resumo Didático', desc: 'Texto educacional', key: 'Alt+Shift+D', styleSelect: [{value:'topicos',label:'📌 Tópicos'},{value:'historia',label:'📖 História'},{value:'curto',label:'⚡ Resumo curto'},{value:'simples',label:'🧒 Bem simples'},{value:'passo',label:'🪜 Passo a passo'},{value:'perguntas',label:'❓ Perguntas e respostas'},{value:'analogia',label:'💡 Com analogia'}] },
+            { id: 'summarize-text', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/></svg>', title: 'Resumir Texto', desc: 'Resumo rápido', key: 'Alt+Shift+S' },
+            { id: 'text-to-image', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><path d="M17 6l.7 1.5 1.5.7-1.5.7L17 10.4l-.7-1.5-1.5-.7 1.5-.7z"/></svg>', title: 'Imagem do Texto', desc: 'Gera imagem do texto', key: 'Alt+Shift+T' },
+            { id: 'focus-mode-plain', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>', title: 'Foco', desc: 'Foco no conteúdo', key: 'Alt+Shift+O' },
+            { id: 'focus-mode', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="4" y1="4" x2="8" y2="8"/><line x1="20" y1="4" x2="16" y2="8"/></svg>', title: 'Foco Sem Imagens', desc: 'Foco só no texto', key: 'Alt+Shift+C' },
+            { id: 'focus-mode-images', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><rect x="3" y="3" width="7" height="5" rx="1"/></svg>', title: 'Foco Com Imagens', desc: 'Foco só nas imagens', key: 'Alt+Shift+M' }
         ])}
 
             ${this.createSection('Assistência Virtual', [
-            { id: 'chatbot', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M9 14s1 2 3 2 3-2 3-2"/></svg>', title: 'ChatBot Assistente', desc: 'Converse com IA' },
-            { id: 'call-center', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>', title: 'Central de Atendimento', desc: 'Atendimento por voz' }
+            { id: 'chatbot', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M9 14s1 2 3 2 3-2 3-2"/></svg>', title: 'ChatBot Assistente', desc: 'Converse com IA', key: 'Alt+Shift+H' },
         ])}
 
             <div class="menu-footer">
@@ -238,17 +272,42 @@ class IncluaAIWidget {
     }
 
     createCategory(id, icon, title, color, items) {
-        const cards = items.map(item => `
-            <button class="feature-card" 
-                    data-action="${item.id}" 
+        const cards = items.map(item => {
+            const sel = item.colorSelect
+                ? { id: 'link-highlight-color', label: 'Cor do destaque', opts: item.colorSelect }
+                : item.styleSelect ? { id: 'didactic-style', label: 'Estilo do resumo', opts: item.styleSelect } : null;
+            if (sel) {
+                const options = sel.opts.map(o =>
+                    `<option value="${o.value}">${o.label}</option>`
+                ).join('');
+                return `
+                    <div class="feature-card" role="button" tabindex="0"
+                            data-action="${item.id}"
+                            data-category="${id}"
+                            aria-label="${item.title}: ${item.desc}. Estado: Desligado. ${item.key ? 'Atalho: ' + item.key : ''}">
+                        <div class="active-check">✓</div>
+                        ${item.key ? `<div class="card-shortcut">${item.key}</div>` : ''}
+                        <div class="card-icon">${item.emoji}</div>
+                        <div class="card-label">${item.title}</div>
+                        <select class="link-highlight-select" id="${sel.id}" aria-label="${sel.label}">
+                            ${options}
+                        </select>
+                    </div>
+                `;
+            }
+            return `
+            <button class="feature-card"
+                    data-action="${item.id}"
                     data-category="${id}"
                     aria-label="${item.title}: ${item.desc}. Estado: Desligado. ${item.key ? 'Atalho: ' + item.key : ''}">
                 <div class="active-check">✓</div>
+                ${item.key ? `<div class="card-shortcut">${item.key}</div>` : ''}
                 <div class="card-icon">${item.emoji}</div>
                 <div class="card-label">${item.title}</div>
                 <div class="card-status">OFF</div>
             </button>
-        `).join('');
+        `;
+        }).join('');
 
         return `
             <div class="acess-category" data-category="${id}" style="--category-color: ${color}">
@@ -267,8 +326,9 @@ class IncluaAIWidget {
         const cards = items.map(item => `
             <button class="feature-card" 
                     data-action="${item.id}"
-                    aria-label="${item.title}: ${item.desc}">
+                    aria-label="${item.title}: ${item.desc}. ${item.key ? 'Atalho: ' + item.key : ''}">
                 <div class="active-check">✓</div>
+                ${item.key ? `<div class="card-shortcut">${item.key}</div>` : ''}
                 <div class="card-icon">${item.emoji}</div>
                 <div class="card-label">${item.title}</div>
                 <div class="card-status">OFF</div>
@@ -294,8 +354,10 @@ class IncluaAIWidget {
     // ==========================================================================
 
     showToast(message, type = 'info') {
-        const container = document.getElementById('inclua-ai-toasts');
+        // Com o chat aberto, o aviso aparece à esquerda dele (senão ficaria escondido atrás)
+        const container = this.getChatToastContainer() || document.getElementById('inclua-ai-toasts');
         if (!container) return;
+        if (container.id === 'inclua-ai-toasts') this.positionToastContainer(container);
 
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
@@ -315,6 +377,8 @@ class IncluaAIWidget {
             <span>${message}</span>
         `;
 
+        // Modo "um por vez": tira os avisos antigos para não empilhar por cima do painel
+        if (container.dataset.mode === 'single') container.querySelectorAll('.toast').forEach(t => t.remove());
         container.appendChild(toast);
 
         // Auto remove
@@ -322,6 +386,54 @@ class IncluaAIWidget {
             toast.classList.add('hiding');
             toast.addEventListener('animationend', () => toast.remove());
         }, 4000);
+    }
+
+    // Avisos ficam ao lado do ícone do assistente, embaixo (na faixa entre o ícone e o painel aberto)
+    positionToastContainer(container) {
+        const toggle = document.getElementById('inclua-ai-toggle');
+        const tr = toggle && toggle.getBoundingClientRect();
+        if (!tr || !tr.width) return;
+        const vw = window.innerWidth, vh = window.innerHeight, gap = 12;
+        const base = 'position:fixed;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;pointer-events:none;';
+        const panel = document.getElementById('inclua-ai-panel');
+        const panelOpen = !!(this.isActive && panel && !panel.hidden);
+
+        const onRight = (tr.left + tr.width / 2) > vw / 2;
+        const room = onRight ? tr.left - gap - 16 : vw - tr.right - gap - 16;
+
+        if (room >= 200) {
+            const side = onRight ? `right:${Math.round(vw - tr.left + gap)}px;` : `left:${Math.round(tr.right + gap)}px;`;
+            // Painel aberto: desce até o rodapé e mostra um aviso por vez, para caber abaixo do painel
+            const bottom = panelOpen ? 12 : Math.max(12, Math.round(vh - tr.bottom));
+            container.style.cssText = base + `bottom:${bottom}px;width:${Math.min(380, Math.round(room))}px;` + side;
+            container.dataset.mode = panelOpen ? 'single' : 'side';
+        } else {
+            // Tela estreita demais: no topo, centralizado
+            container.style.cssText = base + `top:12px;left:50%;transform:translateX(-50%);width:${Math.min(380, vw - 32)}px;`;
+            container.dataset.mode = 'single';
+        }
+    }
+
+    getChatToastContainer() {
+        const overlay = document.getElementById('chatbot-modal');
+        const dialog = overlay && overlay.querySelector('.inclua-chat-dialog');
+        if (!dialog) return null;
+        let box = overlay.querySelector('#inclua-chat-toasts');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'inclua-chat-toasts';
+            box.setAttribute('aria-live', 'polite');
+            overlay.appendChild(box);
+        }
+        const r = dialog.getBoundingClientRect();
+        const room = r.left - 32; // espaço livre à esquerda do chat
+        if (room >= 220) {
+            box.style.cssText = `position:fixed;z-index:2;display:flex;flex-direction:column;gap:12px;pointer-events:none;top:${Math.max(12, r.top)}px;left:16px;width:${Math.min(380, room)}px;`;
+        } else {
+            // Tela estreita: não cabe ao lado, então fica no topo, por cima
+            box.style.cssText = `position:fixed;z-index:2;display:flex;flex-direction:column;gap:12px;pointer-events:none;top:12px;left:50%;transform:translateX(-50%);width:${Math.min(380, window.innerWidth - 32)}px;`;
+        }
+        return box;
     }
 
     showAlert(message, type = 'info') {
@@ -554,6 +666,7 @@ class IncluaAIWidget {
 
         const panel = document.getElementById('inclua-ai-panel');
         panel.addEventListener('click', (e) => {
+            if (e.target.closest('.link-highlight-select')) return;
             const button = e.target.closest('.feature-button, .feature-card, .reset-button');
             if (button) {
                 const action = button.dataset.action;
@@ -561,9 +674,39 @@ class IncluaAIWidget {
             }
         });
 
+        panel.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const card = e.target.closest('.feature-card[role="button"]');
+                if (card && !e.target.closest('.link-highlight-select')) {
+                    e.preventDefault();
+                    this.handleAction(card.dataset.action, card);
+                }
+            }
+        });
+
         const colorblindFilter = document.getElementById('colorblind-filter');
         if (colorblindFilter) {
             colorblindFilter.addEventListener('change', (e) => this.applyColorblindFilter(e.target.value));
+        }
+
+        const linkHighlightSelect = document.getElementById('link-highlight-color');
+        if (linkHighlightSelect) {
+            linkHighlightSelect.value = this.settings.highlightLinksColor || '#ffff00';
+            linkHighlightSelect.addEventListener('change', (e) => {
+                e.stopPropagation();
+                this.applyHighlightLinksColor(e.target.value);
+            });
+        }
+
+        const didacticStyleSelect = document.getElementById('didactic-style');
+        if (didacticStyleSelect) {
+            didacticStyleSelect.value = this.settings.didacticStyle || 'topicos';
+            didacticStyleSelect.addEventListener('change', (e) => {
+                e.stopPropagation();
+                this.settings.didacticStyle = e.target.value;
+                this.saveSettings();
+                this.showToast('Estilo do resumo: ' + e.target.selectedOptions[0].textContent, 'success');
+            });
         }
 
         // Fechar ao clicar fora
@@ -586,11 +729,15 @@ class IncluaAIWidget {
                 case 'describe-image': this.toggleImageDescriber(); break;
                 case 'summarize-text': this.toggleTextSummarizer(); break;
                 case 'didactic-summary': this.toggleDidacticSummary(); break;
+                case 'text-to-image': this.toggleTextToImage(); break;
                 case 'libras-hover': this.toggleLibrasHover(); break;
+                case 'libras-request': this.toggleLibrasRequest(); break;
+                case 'libras-my-requests': this.openLibrasRequests(); break;
                 case 'voice-commands': this.toggleVoiceCommands(); break;
-                case 'focus-mode': this.toggleFocusMode(); break;
+                case 'focus-mode-plain': this.toggleFocusMode('plain'); break;
+                case 'focus-mode': this.toggleFocusMode('no-images'); break;
+                case 'focus-mode-images': this.toggleFocusMode('images'); break;
                 case 'chatbot': this.openChatbot(); break;
-                case 'call-center': this.openCallCenter(); break;
                 case 'reset-settings': this.resetSettings(); break;
             }
 
@@ -616,9 +763,13 @@ class IncluaAIWidget {
         if (action === 'describe-image') isActive = this.settings.imageDescriber;
         if (action === 'summarize-text') isActive = this.settings.textSummarizer;
         if (action === 'didactic-summary') isActive = this.settings.didacticSummary;
+        if (action === 'text-to-image') isActive = this.settings.textToImage;
         if (action === 'libras-hover') isActive = this.settings.librasHover;
+        if (action === 'libras-request') isActive = this.settings.librasRequest;
         if (action === 'voice-commands') isActive = this.settings.voiceCommands;
+        if (action === 'focus-mode-plain') isActive = this.settings.focusModePlain;
         if (action === 'focus-mode') isActive = this.settings.focusMode;
+        if (action === 'focus-mode-images') isActive = this.settings.focusModeImages;
 
         // Aplica classes e textos
         if (isActive) {
@@ -665,7 +816,7 @@ class IncluaAIWidget {
                 return;
             }
 
-            // Atalhos de Função (F1-F10)
+            // Atalhos Alt+Shift+letra
             this.handleFunctionKeys(e);
 
             // Navegação por setas quando painel aberto
@@ -679,24 +830,33 @@ class IncluaAIWidget {
     }
 
     handleFunctionKeys(e) {
-        const functionKeyMap = {
-            'F1': () => this.showHelpScreen(),
-            'F2': () => this.triggerAction('font-increase', 'Aumentar fonte'),
-            'F3': () => this.triggerAction('font-decrease', 'Diminuir fonte'),
-            'F4': () => this.triggerAction('text-reader', 'Leitor de texto'),
-            'F5': () => this.triggerAction('hover-reader', 'Ler ao passar mouse'),
-            'F6': () => this.triggerAction('describe-image', 'Descrever imagem'),
-            'F7': () => this.triggerAction('summarize-text', 'Resumir texto'),
-            'F8': () => this.triggerAction('libras-hover', 'Libras ao hover'),
-            'F9': () => this.triggerAction('highlight-links', 'Destacar links'),
-            'F10': () => this.triggerAction('didactic-summary', 'Resumo didático'),
-            'F11': () => this.triggerAction('focus-mode', 'Modo foco'),
-            'F12': () => this.triggerAction('voice-commands', 'Controle por voz')
+        if (!e.altKey || !e.shiftKey) return;
+
+        const key = e.key.toLowerCase();
+        const shortcutMap = {
+            '?': () => this.showHelpScreen(),
+            'f': () => this.triggerAction('font-increase', 'Aumentar fonte'),
+            'g': () => this.triggerAction('font-decrease', 'Diminuir fonte'),
+            'l': () => this.triggerAction('highlight-links', 'Destacar links'),
+            'r': () => this.triggerAction('text-reader', 'Leitor de texto'),
+            'e': () => this.triggerAction('hover-reader', 'Ler ao passar mouse'),
+            'i': () => this.triggerAction('describe-image', 'Descrever imagem'),
+            's': () => this.triggerAction('summarize-text', 'Resumir texto'),
+            'b': () => this.triggerAction('libras-hover', 'Libras ao hover'),
+            'd': () => this.triggerAction('didactic-summary', 'Resumo didático'),
+            't': () => this.triggerAction('text-to-image', 'Imagem do texto'),
+            'p': () => this.triggerAction('libras-request', 'Libras por pedido'),
+            'q': () => this.triggerAction('libras-my-requests', 'Meus pedidos de Libras'),
+            'h': () => this.triggerAction('chatbot', 'Assistente'),
+            'o': () => this.triggerAction('focus-mode-plain', 'Foco'),
+            'c': () => this.triggerAction('focus-mode', 'Foco sem imagens'),
+            'm': () => this.triggerAction('focus-mode-images', 'Foco com imagens'),
+            'v': () => this.triggerAction('voice-commands', 'Controle por voz')
         };
 
-        if (functionKeyMap[e.key]) {
+        if (shortcutMap[key]) {
             e.preventDefault();
-            functionKeyMap[e.key]();
+            shortcutMap[key]();
         }
     }
 
@@ -755,25 +915,31 @@ class IncluaAIWidget {
                         <div class="help-section">
                             <h3>Atalhos Globais</h3>
                             <ul class="help-list">
-                                <li><kbd>Alt</kbd> + <kbd>A</kbd> - Abrir/Fechar Menu</li>
-                                <li><kbd>F1</kbd> - Mostrar esta ajuda</li>
-                                <li><kbd>Esc</kbd> - Fechar painel</li>
+                                <li><kbd>Alt</kbd>+<kbd>A</kbd> — Abrir/Fechar Menu</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>?</kbd> — Mostrar esta ajuda</li>
+                                <li><kbd>Esc</kbd> — Fechar painel</li>
                             </ul>
                         </div>
                         <div class="help-section">
-                            <h3>Funcionalidades (F2-F12)</h3>
+                            <h3>Funcionalidades (Alt+Shift+letra)</h3>
                             <ul class="help-list">
-                                <li><kbd>F2</kbd> - Aumentar fonte</li>
-                                <li><kbd>F3</kbd> - Diminuir fonte</li>
-                                <li><kbd>F4</kbd> - Leitor de texto</li>
-                                <li><kbd>F5</kbd> - Ler ao passar mouse</li>
-                                <li><kbd>F6</kbd> - Descrever imagem</li>
-                                <li><kbd>F7</kbd> - Resumir texto</li>
-                                <li><kbd>F8</kbd> - Libras ao hover</li>
-                                <li><kbd>F9</kbd> - Destacar links</li>
-                                <li><kbd>F10</kbd> - Resumo didático</li>
-                                <li><kbd>F11</kbd> - Modo foco</li>
-                                <li><kbd>F12</kbd> - Controle por voz</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> — Aumentar fonte</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> — Diminuir fonte</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> — Destacar links</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> — Leitor de texto</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> — Leitor ao hover</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd> — Descrever imagem</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> — Resumir texto</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> — Libras ao hover</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd> — Resumo didático</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> — Imagem do texto</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> — Libras por pedido</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Q</kbd> — Meus pedidos de Libras</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd> — Assistente (chat por voz)</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> — Foco</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> — Foco sem imagens</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd> — Foco com imagens</li>
+                                <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> — Controle por voz</li>
                             </ul>
                         </div>
                         <div class="help-section">
@@ -808,10 +974,10 @@ class IncluaAIWidget {
         document.querySelector('.help-close').focus();
         this.announceToScreenReader('Tela de ajuda aberta. Navegue com Tab para ver os atalhos');
 
-        // Fechar com Esc ou F1
+        // Fechar com Esc ou Alt+Shift+?
         const helpScreen = document.getElementById('inclua-help-screen');
         const closeHelp = (e) => {
-            if (e.key === 'Escape' || e.key === 'F1') {
+            if (e.key === 'Escape' || (e.altKey && e.shiftKey && e.key === '?')) {
                 e.preventDefault();
                 helpScreen.remove();
                 document.removeEventListener('keydown', closeHelp);
@@ -845,11 +1011,61 @@ class IncluaAIWidget {
     // ==========================================================================
 
     adjustFontSize(delta) {
-        this.settings.fontSize = Math.max(-2, Math.min(5, this.settings.fontSize + delta));
-        const percentage = 100 + (this.settings.fontSize * 20);
-        document.documentElement.style.fontSize = `${percentage}%`;
+        this.settings.fontSize = Math.max(-3, Math.min(5, this.settings.fontSize + delta));
+        this.applyFontSize();
         this.saveSettings();
-        this.showToast(`Tamanho da fonte: ${percentage}%`, 'success');
+        const step = this.settings.fontSize;
+        const label = step === 0
+            ? 'Fonte no tamanho original'
+            : step > 0
+                ? `Fonte aumentada (+${step * 15}%)`
+                : `Fonte reduzida (${step * 15}%)`;
+        this.showToast(label, 'success');
+    }
+
+    applyFontSize() {
+        // Remove marcações anteriores e restaura inline styles
+        document.querySelectorAll('[data-inclua-orig-fs]').forEach(el => {
+            const orig = el.dataset.incluaOrigFs;
+            if (orig === '') {
+                el.style.removeProperty('font-size');
+            } else {
+                el.style.fontSize = orig;
+            }
+            delete el.dataset.incluaOrigFs;
+        });
+
+        if (this.settings.fontSize === 0) return;
+
+        const factor = 1 + (this.settings.fontSize * 0.15);
+
+        // Seleciona apenas elementos que carregam texto diretamente
+        const selector = [
+            'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'li', 'dt', 'dd', 'td', 'th', 'caption', 'figcaption',
+            'label', 'legend', 'blockquote', 'cite', 'summary',
+            'a', 'button', 'span', 'strong', 'em', 'b', 'i', 'small',
+            'input', 'textarea', 'select', 'option',
+            'pre', 'code', 'kbd', 'abbr'
+        ].join(', ');
+
+        document.querySelectorAll(selector).forEach(el => {
+            // Ignora o próprio widget e SVGs
+            if (el.closest('#inclua-ai-widget')) return;
+            if (el.closest('svg')) return;
+
+            // Salva o inline style original (antes de qualquer mudança nossa)
+            if (!el.hasAttribute('data-inclua-orig-fs')) {
+                el.dataset.incluaOrigFs = el.style.fontSize || '';
+            }
+
+            // Lê o tamanho REAL em px (já calculado pelo browser, sem cascata)
+            const computedPx = parseFloat(window.getComputedStyle(el).fontSize);
+            if (!computedPx || isNaN(computedPx)) return;
+
+            const newPx = Math.round(computedPx * factor * 10) / 10;
+            el.style.setProperty('font-size', `${newPx}px`, 'important');
+        });
     }
 
 
@@ -857,12 +1073,23 @@ class IncluaAIWidget {
     toggleHighlightLinks() {
         this.settings.highlightLinks = !this.settings.highlightLinks;
         document.body.classList.toggle('inclua-highlight-links', this.settings.highlightLinks);
+        this.applyHighlightLinksColor(this.settings.highlightLinksColor);
 
         // Atualiza visual
         const btn = document.querySelector('[data-action="highlight-links"]');
         if (btn) this.updateButtonVisuals(btn);
 
         this.showToast(`Destaque de links ${this.settings.highlightLinks ? 'ativado' : 'desativado'}`, 'success');
+        this.saveSettings();
+    }
+
+    applyHighlightLinksColor(color) {
+        this.settings.highlightLinksColor = color;
+        document.body.style.setProperty('--inclua-link-highlight-color', color);
+        document.body.style.setProperty('--inclua-link-highlight-shadow', color + 'cc');
+        const select = document.getElementById('link-highlight-color');
+        if (select) select.value = color;
+        this.saveSettings();
     }
 
     toggleTextReader() {
@@ -884,7 +1111,7 @@ class IncluaAIWidget {
         }
     }
 
-    handleTextSelection() {
+    handleTextSelection(event) {
         // Ignora seleções dentro do widget
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) return;
@@ -892,8 +1119,8 @@ class IncluaAIWidget {
         const range = selection.getRangeAt(0);
         if (range.startContainer.parentElement?.closest('#inclua-ai-widget')) return;
         
-        const text = selection.toString().trim();
-        if (text.length > 0) {
+        const text = this.takeSelection(event, 1);
+        if (text) {
             console.log('Texto selecionado para leitura:', text.substring(0, 50) + '...');
             speechSynthesis.cancel();
             
@@ -1289,6 +1516,7 @@ class IncluaAIWidget {
 
     toggleTextSummarizer() {
         this.settings.textSummarizer = !this.settings.textSummarizer;
+        if (this.settings.textSummarizer && (this.settings.textToImage || this.settings.librasRequest)) this.disableSelectionModes('summarize-text');
 
         // Se selecionar resumo normal, desabilita resumo didático
         if (this.settings.textSummarizer && this.settings.didacticSummary) {
@@ -1308,9 +1536,22 @@ class IncluaAIWidget {
         }
     }
 
-    async handleTextSummarization() {
+    // Devolve o texto selecionado só se for uma seleção NOVA (ignora cliques dentro do widget/janelas
+    // e o mesmo texto que já foi processado)
+    takeSelection(event, minLength) {
+        if (this.librasSelecting) return null;
+        const target = event && event.target;
+        if (target && target.closest && target.closest('#inclua-ai-widget, .modal-overlay, #chatbot-modal')) return null;
         const text = window.getSelection().toString().trim();
-        if (text.length >= 50) {
+        if (text.length < minLength) return null;
+        if (text === this.lastSelectionHandled) return null;
+        this.lastSelectionHandled = text;
+        return text;
+    }
+
+    async handleTextSummarization(event) {
+        const text = this.takeSelection(event, 50);
+        if (text) {
             this.showLoading('text-summary', '📝 Gerando resumo inteligente...');
             try {
                 const response = await this.fetchWithRetry(`${this.getApiBaseUrl()}/summarize-text`, {
@@ -1354,6 +1595,7 @@ class IncluaAIWidget {
 
     toggleDidacticSummary() {
         this.settings.didacticSummary = !this.settings.didacticSummary;
+        if (this.settings.didacticSummary && (this.settings.textToImage || this.settings.librasRequest)) this.disableSelectionModes('didactic-summary');
 
         // Se ativar resumo didático, desativar resumo normal
         if (this.settings.didacticSummary && this.settings.textSummarizer) {
@@ -1379,20 +1621,20 @@ class IncluaAIWidget {
         }
     }
 
-    async handleDidacticSummarization() {
+    async handleDidacticSummarization(event) {
         // Não gerar resumo se um modal estiver aberto
         if (this.activeModal) {
             return;
         }
 
-        const text = window.getSelection().toString().trim();
-        if (text.length >= 50 && this.settings.didacticSummary) {
+        const text = this.takeSelection(event, 50);
+        if (text && this.settings.didacticSummary) {
             this.showLoading('didactic-summary', '📚 Criando resumo didático...');
             try {
                 const response = await this.fetchWithRetry(`${this.getApiBaseUrl()}/didactic-summarize`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ textToSummarize: text })
+                    body: JSON.stringify({ textToSummarize: text, style: this.settings.didacticStyle || 'topicos' })
                 });
 
                 if (!response.ok) throw new Error('Falha na API');
@@ -1408,14 +1650,14 @@ class IncluaAIWidget {
                             </div>
                             <div class="ai-result-meta">
                                 <h3>Resumo Educacional</h3>
-                                <span>${text.length} caracteres → Formato Didático</span>
+                                <span>${text.length} caracteres → ${this.escapeHtml(data.styleName || 'Formato Didático')}</span>
                             </div>
                         </div>
                         <div class="ai-result-content">
-                            <div class="ai-result-text" style="white-space: pre-line;">${data.didacticSummary}</div>
+                            <div class="ai-result-text" style="white-space: pre-line;">${this.escapeHtml(data.didacticSummary)}</div>
                             <div class="ai-result-actions">
-                                <button onclick="window.incluaAIWidget.copyDidacticSummary(this)" data-didactic="${data.didacticSummary.replace(/"/g, '&quot;')}" class="btn btn-primary">Copiar</button>
-                                <button onclick="window.incluaAIWidget.playDidacticSummary(this)" data-didactic="${data.didacticSummary.replace(/"/g, '&quot;')}" class="btn btn-secondary">Ouvir</button>
+                                <button onclick="window.incluaAIWidget.copyDidacticSummary(this)" data-didactic="${this.escapeHtml(data.didacticSummary)}" class="btn btn-primary">Copiar</button>
+                                <button onclick="window.incluaAIWidget.playDidacticSummary(this)" data-didactic="${this.escapeHtml(data.didacticSummary)}" class="btn btn-secondary">Ouvir</button>
                             </div>
                         </div>
                     </div>
@@ -1548,8 +1790,10 @@ class IncluaAIWidget {
             'hover': () => this.execVoice('hover-reader', 'Hover reader'),
 
             // Foco
-            'modo foco': () => this.execVoice('focus-mode', 'Modo foco'),
-            'foco': () => this.execVoice('focus-mode', 'Modo foco'),
+            'foco sem imagens': () => this.execVoice('focus-mode', 'Foco sem imagens'),
+            'foco com imagens': () => this.execVoice('focus-mode-images', 'Foco com imagens'),
+            'modo foco': () => this.execVoice('focus-mode-plain', 'Foco'),
+            'foco': () => this.execVoice('focus-mode-plain', 'Foco'),
             'concentrar': () => this.execVoice('focus-mode', 'Concentração ativada'),
             'concentração': () => this.execVoice('focus-mode', 'Modo concentração'),
 
@@ -1569,6 +1813,15 @@ class IncluaAIWidget {
             'resumo': () => this.execVoice('summarize-text', 'Modo resumo'),
             'resumir texto': () => this.execVoice('summarize-text', 'Resumidor ativado'),
             'didático': () => this.execVoice('didactic-summary', 'Resumo didático'),
+            'gerar imagem': () => this.execVoice('text-to-image', 'Selecione um texto para gerar a imagem'),
+            'criar imagem': () => this.execVoice('text-to-image', 'Selecione um texto para gerar a imagem'),
+            'imagem do texto': () => this.execVoice('text-to-image', 'Selecione um texto para gerar a imagem'),
+            'assistente': () => this.execVoice('chatbot', 'Assistente aberto'),
+            'pedir libras': () => this.execVoice('libras-request', 'Selecione um texto para pedir em Libras'),
+            'libras por pedido': () => this.execVoice('libras-request', 'Selecione um texto para pedir em Libras'),
+            'meus pedidos': () => this.execVoice('libras-my-requests', 'Meus pedidos de Libras'),
+            'conversar': () => this.execVoice('chatbot', 'Assistente aberto'),
+            'abrir chat': () => this.execVoice('chatbot', 'Assistente aberto'),
 
             // Libras
             'libras': () => this.execVoice('libras-hover', 'Libras ativado'),
@@ -1664,23 +1917,36 @@ class IncluaAIWidget {
     // FOCUS MODE - Modo de Concentração
     // ==========================================================================
 
-    toggleFocusMode() {
-        this.settings.focusMode = !this.settings.focusMode;
+    toggleFocusMode(mode) {
+        const modes = {
+            'plain': { key: 'focusModePlain', action: 'focus-mode-plain', label: 'Foco ativado' },
+            'no-images': { key: 'focusMode', action: 'focus-mode', label: 'Foco sem imagens ativado' },
+            'images': { key: 'focusModeImages', action: 'focus-mode-images', label: 'Foco com imagens ativado' }
+        };
+        const current = modes[mode];
+        const isActive = !this.settings[current.key];
 
-        // Atualiza visual
-        const btn = document.querySelector('[data-action="focus-mode"]');
-        if (btn) this.updateButtonVisuals(btn);
+        // Apenas um modo de foco pode ficar ativo por vez
+        Object.values(modes).forEach(m => {
+            this.settings[m.key] = false;
+            const btn = document.querySelector(`[data-action="${m.action}"]`);
+            if (btn) this.updateButtonVisuals(btn);
+        });
+        this.disableFocusMode();
 
-        if (this.settings.focusMode) {
-            this.enableFocusMode();
-            this.showToast('🎯 Modo Foco ativado - Passe o mouse para iluminar', 'success');
+        if (isActive) {
+            this.settings[current.key] = true;
+            const btn = document.querySelector(`[data-action="${current.action}"]`);
+            if (btn) this.updateButtonVisuals(btn);
+            this.enableFocusMode(mode);
+            this.showToast(`🎯 ${current.label} — Passe o mouse para iluminar`, 'success');
         } else {
-            this.disableFocusMode();
             this.showToast('Modo Foco desativado', 'info');
         }
+        this.saveSettings();
     }
 
-    enableFocusMode() {
+    enableFocusMode(mode = 'plain') {
         // Cria overlay escuro
         if (!document.getElementById('inclua-focus-overlay')) {
             const overlay = document.createElement('div');
@@ -1693,8 +1959,10 @@ class IncluaAIWidget {
             this.boundFocusHandler = this.handleFocusHover.bind(this);
         }
 
+        this.focusIncludesImages = mode === 'images';
         document.addEventListener('mousemove', this.boundFocusHandler);
         document.body.classList.add('inclua-focus-active');
+        document.body.classList.toggle('inclua-focus-no-images', mode === 'no-images');
     }
 
     disableFocusMode() {
@@ -1711,32 +1979,44 @@ class IncluaAIWidget {
             highlighted.classList.remove('focus-highlighted');
         }
 
+        this.focusIncludesImages = false;
         document.body.classList.remove('inclua-focus-active');
+        document.body.classList.remove('inclua-focus-no-images');
     }
 
     handleFocusHover(e) {
-        if (!this.settings.focusMode) return;
+        if (!document.body.classList.contains('inclua-focus-active')) return;
         if (e.target.closest('#inclua-ai-widget')) return;
         if (e.target.id === 'inclua-focus-overlay') return;
 
-        // Remove highlight anterior
-        const oldHighlight = document.querySelector('.focus-highlighted');
-        if (oldHighlight && oldHighlight !== e.target) {
-            oldHighlight.classList.remove('focus-highlighted');
-        }
-
         // Encontra elemento de conteúdo mais próximo
         const contentTags = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'TD', 'TH', 'BLOCKQUOTE', 'DIV', 'ARTICLE', 'SECTION'];
-        let target = e.target;
+        let target = null;
 
-        // Sobe na árvore até encontrar um elemento de conteúdo significativo
-        while (target && !contentTags.includes(target.tagName)) {
-            target = target.parentElement;
+        if (this.focusIncludesImages) {
+            // Foco com imagens: só imagens são destacadas (figura > picture > img/vídeo)
+            target = e.target.closest('figure, picture, img, video');
+            if (!target) {
+                document.querySelectorAll('.focus-highlighted').forEach(el => el.classList.remove('focus-highlighted'));
+                return;
+            }
         }
 
-        if (target && target !== document.body) {
-            target.classList.add('focus-highlighted');
+        if (!target) {
+            target = e.target;
+            // Sobe na árvore até encontrar um elemento de conteúdo significativo
+            while (target && !contentTags.includes(target.tagName)) {
+                target = target.parentElement;
+            }
         }
+
+        if (!target || target === document.body || target === document.documentElement) return;
+
+        // Remove highlight anterior apenas se o alvo mudou (evita piscar)
+        document.querySelectorAll('.focus-highlighted').forEach(el => {
+            if (el !== target) el.classList.remove('focus-highlighted');
+        });
+        target.classList.add('focus-highlighted');
     }
 
     // ==========================================================================
@@ -1747,16 +2027,20 @@ class IncluaAIWidget {
         this.settings.librasHover = !this.settings.librasHover;
 
         if (this.settings.librasHover) {
-            this.initLibrasPlayer();
+            // Fecha o painel para ele não cobrir o avatar
+            if (this.isActive) this.togglePanel();
             document.addEventListener('mouseover', this.boundHandleLibrasHover);
             document.addEventListener('mouseout', this.boundHandleLibrasHoverOut);
-            this.showToast('🤟 Passe o mouse sobre textos para traduzir em Libras', 'info');
+            this.showToast('🤟 Carregando o avatar de Libras...', 'info');
+            this.ensureVLibras()
+                .then(() => { if (this.settings.librasHover) this.showToast('🤟 Passe o mouse sobre um texto e o avatar traduz em Libras', 'success'); })
+                .catch(() => this.showToast('Não foi possível carregar o avatar de Libras. O site pode estar bloqueando.', 'error'));
         } else {
             document.removeEventListener('mouseover', this.boundHandleLibrasHover);
             document.removeEventListener('mouseout', this.boundHandleLibrasHoverOut);
             clearTimeout(this.librasHoverTimeout);
             this.removeLibrasHighlight();
-            this.hideLibrasPlayer();
+            this.hideVLibras();
             this.showToast('Libras ao hover desativado', 'info');
         }
     }
@@ -2283,7 +2567,7 @@ class IncluaAIWidget {
     }
 
     async handleLibrasHover(e) {
-        if (this.activeModal || e.target.closest('#inclua-ai-widget') || e.target.closest('#inclua-libras-player')) return;
+        if (this.activeModal || e.target.closest('#inclua-ai-widget') || e.target.closest('#vlibras-app-root, #vlibras-access-wrapper, [vw]')) return;
 
         const inlineTags = ['A', 'B', 'STRONG', 'I', 'EM', 'SPAN', 'LABEL', 'BUTTON'];
         let target = e.target;
@@ -2301,37 +2585,7 @@ class IncluaAIWidget {
             this.librasHoverTimeout = setTimeout(async () => {
                 this.highlightLibrasElement(target);
                 this.currentLibrasTarget = target;
-                this.showLoading('libras-translation', '🤟 Traduzindo para Libras...');
-                this.showLibrasLoading(text);
-
-                try {
-                    const response = await this.fetchWithRetry(`${this.getApiBaseUrl()}/convert-to-libras`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ text })
-                    });
-
-                    this.hideLoading('libras-translation');
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.currentLibrasGlosa = data.librasText;
-                        this.currentOriginalText = text;
-                        this.displayLibrasResult(text, data.librasText);
-                    } else {
-                        // API falhou - usar texto original
-                        this.currentLibrasGlosa = null;
-                        this.currentOriginalText = text;
-                        this.displayLibrasResult(text, text.toUpperCase() + ' (texto original)');
-                    }
-                } catch (error) {
-                    console.error('Erro ao processar Libras:', error);
-                    this.hideLoading('libras-translation');
-                    // API falhou - usar texto original
-                    this.currentLibrasGlosa = null;
-                    this.currentOriginalText = text;
-                    this.displayLibrasResult(text, text.toUpperCase() + ' (texto original)');
-                }
+                await this.signWithVLibras(target);
             }, 800);
         }
     }
@@ -2519,16 +2773,26 @@ class IncluaAIWidget {
 
     saveSettings() {
         localStorage.setItem('inclua-ai-settings', JSON.stringify(this.settings));
+        // Avisa a extensão (se existir) para guardar as preferências e valer em todos os sites
+        try { window.postMessage({ source: 'inclua-ai-widget', type: 'settings', settings: this.settings }, '*'); } catch (e) {}
     }
 
     applySettings() {
         if (this.settings.fontSize !== 0) {
-            const percentage = 100 + (this.settings.fontSize * 20);
-            document.documentElement.style.fontSize = `${percentage}%`;
+            this.applyFontSize();
         }
 
         if (this.settings.colorFilter !== 'none') {
             this.applyColorblindFilter(this.settings.colorFilter);
+        }
+
+        if (this.settings.highlightLinksColor) {
+            document.body.style.setProperty('--inclua-link-highlight-color', this.settings.highlightLinksColor);
+            document.body.style.setProperty('--inclua-link-highlight-shadow', this.settings.highlightLinksColor + 'cc');
+        }
+
+        if (this.settings.highlightLinks) {
+            document.body.classList.add('inclua-highlight-links');
         }
     }
 
@@ -2792,29 +3056,22 @@ class IncluaAIWidget {
             }
 
             .card-shortcut {
-                display: none;
-                text-align: center;
-                line-height: 1.2;
-                max-width: 100%;
-                word-wrap: break-word;
-            }
-
-            .card-shortcut {
-                font-size: 9px;
-                color: #94a3b8;
-                background: rgba(0,0,0,0.3);
-                padding: 2px 6px;
-                border-radius: 4px;
+                font-size: 10px;
+                color: #ffffff;
+                background: var(--category-color, #a78bfa);
+                padding: 2px 7px;
+                border-radius: 10px;
                 font-family: 'Courier New', monospace;
-                font-weight: 600;
+                font-weight: 800;
                 position: absolute;
                 top: 4px;
                 right: 4px;
-            }
-
-            .feature-card:hover .card-shortcut {
-                color: var(--category-color);
-                background: rgba(0,0,0,0.5);
+                line-height: 1.5;
+                white-space: nowrap;
+                pointer-events: none;
+                letter-spacing: 0.3px;
+                opacity: 0.9;
+                text-transform: uppercase;
             }
 
             /* Filtro de Daltonismo */
@@ -2911,12 +3168,40 @@ class IncluaAIWidget {
 
             /* Highlight Links Feature */
             body.inclua-highlight-links a {
-                background-color: yellow !important;
+                background-color: var(--inclua-link-highlight-color, #ffff00) !important;
                 color: black !important;
                 outline: 2px solid #000 !important;
                 text-decoration: underline !important;
                 font-weight: bold !important;
-                box-shadow: 0 0 5px rgba(255, 255, 0, 0.8) !important;
+                box-shadow: 0 0 5px var(--inclua-link-highlight-shadow, rgba(255,255,0,0.8)) !important;
+            }
+
+            /* Link highlight color select inside card */
+            .link-highlight-select {
+                width: 100%;
+                margin-top: 6px;
+                padding: 4px 6px;
+                background: rgba(0,0,0,0.35);
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 6px;
+                color: #e2e8f0;
+                font-size: 11px;
+                cursor: pointer;
+                transition: border-color 0.2s;
+            }
+
+            .link-highlight-select:hover {
+                border-color: rgba(255,255,255,0.5);
+            }
+
+            .link-highlight-select:focus {
+                outline: 2px solid #3b82f6;
+                outline-offset: 1px;
+            }
+
+            .link-highlight-select option {
+                background: #1e293b;
+                color: #e2e8f0;
             }
 
             /* Voice Indicator */
@@ -2988,6 +3273,42 @@ class IncluaAIWidget {
 
             .focus-highlighted * {
                 color: black !important;
+            }
+
+            img.focus-highlighted,
+            picture.focus-highlighted,
+            figure.focus-highlighted,
+            video.focus-highlighted {
+                background: transparent !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 4px !important;
+                opacity: 1 !important;
+                filter: none !important;
+                transform: none;
+                outline: 4px solid rgba(255, 255, 255, 0.9) !important;
+                box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.3),
+                            0 0 40px rgba(255, 255, 255, 0.5),
+                            0 0 80px rgba(139, 92, 246, 0.4) !important;
+            }
+
+            figure.focus-highlighted {
+                padding: 12px !important;
+                background: white !important;
+            }
+
+            body.inclua-focus-no-images img,
+            body.inclua-focus-no-images picture,
+            body.inclua-focus-no-images video,
+            body.inclua-focus-no-images figure:not(:has(figcaption)) {
+                display: none !important;
+            }
+
+            body.inclua-focus-no-images figure {
+                background: rgba(0,0,0,0.1);
+                border: 1px dashed rgba(255,255,255,0.2);
+                border-radius: 4px;
+                min-height: 0;
             }
 
             /* Responsivo */
@@ -3168,168 +3489,750 @@ class IncluaAIWidget {
     }
 
     // ==========================================================================
-    // CHATBOT E CALL CENTER (SIMULAÇÃO VISUAL)
+    // IMAGEM A PARTIR DE TEXTO SELECIONADO
+    // ==========================================================================
+
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // Os modos "selecionar texto" não podem ficar ligados ao mesmo tempo (abririam dois resultados)
+    disableSelectionModes(exceptAction) {
+        const modes = [
+            ['textSummarizer', 'summarize-text', () => this.toggleTextSummarizer()],
+            ['didacticSummary', 'didactic-summary', () => this.toggleDidacticSummary()],
+            ['textToImage', 'text-to-image', () => this.toggleTextToImage()],
+            ['librasRequest', 'libras-request', () => this.toggleLibrasRequest()]
+        ];
+        for (const [key, action, turnOff] of modes) {
+            if (action !== exceptAction && this.settings[key]) {
+                turnOff();
+                const btn = document.querySelector(`[data-action="${action}"]`);
+                if (btn) this.updateButtonVisuals(btn);
+            }
+        }
+    }
+
+    toggleTextToImage() {
+        this.settings.textToImage = !this.settings.textToImage;
+
+        if (this.settings.textToImage) {
+            this.disableSelectionModes('text-to-image');
+            if (!this.boundHandleTextToImage) {
+                this.boundHandleTextToImage = this.handleTextToImage.bind(this);
+            }
+            document.addEventListener('mouseup', this.boundHandleTextToImage);
+            this.showToast('Selecione um texto para gerar uma imagem', 'info');
+        } else {
+            if (this.boundHandleTextToImage) {
+                document.removeEventListener('mouseup', this.boundHandleTextToImage);
+            }
+            this.showToast('Imagem do texto desativada', 'info');
+        }
+    }
+
+    async handleTextToImage(event) {
+        if (this.activeModal || !this.settings.textToImage) return;
+        const text = this.takeSelection(event, 10);
+        if (!text) return;
+        await this.generateImageFromText(text);
+    }
+
+    async generateImageFromText(text) {
+        if (this.imageBusy) return;
+        this.imageBusy = true;
+        this.showLoading('text-to-image', '🎨 Criando imagem... pode levar alguns segundos');
+        try {
+            const response = await this.fetchWithTimeout(`${this.getApiBaseUrl()}/generate-image`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text.slice(0, 3000) })
+            }, 120000);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.image) throw new Error(data.error || 'Falha na API');
+
+            this.hideLoading('text-to-image');
+            this.showImageResult(text, data.image);
+            this.showToast('✅ Imagem criada!', 'success');
+        } catch (error) {
+            this.hideLoading('text-to-image');
+            this.showToast(error.name === 'AbortError' ? 'A imagem demorou demais. Tente de novo.' : (error.message || 'Erro ao gerar imagem'), 'error');
+        } finally {
+            this.imageBusy = false;
+        }
+    }
+
+    showImageResult(text, dataUrl) {
+        const short = text.length > 140 ? text.slice(0, 140) + '…' : text;
+        const safe = this.escapeHtml(short);
+        this.showModal('🎨 Imagem do Texto', `
+            <div class="ai-result-container">
+                <figure class="gen-image-figure">
+                    <img class="gen-image" src="${dataUrl}" alt="Imagem criada por IA para o texto: ${safe}">
+                    <figcaption>${safe}</figcaption>
+                </figure>
+                <div class="gen-image-actions">
+                    <button type="button" class="btn btn-primary" data-gen="again">Gerar outra versão</button>
+                    <a class="btn btn-secondary" data-gen="download" href="${dataUrl}" download="inclua-ai-imagem.jpg">Baixar imagem</a>
+                </div>
+            </div>
+        `);
+        const overlay = this.activeModal;
+        const again = overlay && overlay.querySelector('[data-gen="again"]');
+        if (again) {
+            again.addEventListener('click', () => {
+                overlay.querySelector('.modal-close').click();
+                this.generateImageFromText(text);
+            });
+        }
+    }
+
+    // ==========================================================================
+    // CHATBOT ASSISTENTE (IA + voz de entrada e saída)
     // ==========================================================================
 
     openChatbot() {
-        const modalHTML = `
-            <div class="modal-overlay" id="chatbot-modal" role="dialog" aria-modal="true" aria-labelledby="chatbot-title">
-                <div class="modal-content demo-container">
-                    <div class="modal-header">
-                        <h2 id="chatbot-title" class="modal-title">💬 ChatBot</h2>
-                        <button class="modal-close" onclick="incluaAIWidget.closeChatbot()" aria-label="Fechar" title="Fechar">
-                            ✕
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="demo-badge">🎭 Modo Demonstração</div>
-                        
-                        <div class="demo-preview">
-                            <div class="chat-demo-window">
-                                <div class="demo-message bot">
-                                    <div class="demo-avatar"></div>
-                                    <div class="demo-bubble">Olá! Como posso ajudar?</div>
-                                </div>
-                                <div class="demo-message user">
-                                    <div class="demo-bubble">Preciso de ajuda com acessibilidade</div>
-                                    <div class="demo-avatar">👤</div>
-                                </div>
-                                <div class="demo-message bot">
-                                    <div class="demo-avatar"></div>
-                                    <div class="demo-bubble">Posso te ajudar! Temos recursos de leitura, descrição de imagens...</div>
-                                </div>
-                            </div>
-                            
-                            <div class="demo-input-bar">
-                                <div class="demo-input">Digite sua mensagem...</div>
-                                <button class="demo-voice-btn">🎤</button>
-                            </div>
-                        </div>
+        // Atalho de abrir também fecha (alterna)
+        if (document.getElementById('chatbot-modal')) { this.closeChatbot(); return; }
+        if (!this.chatHistory) this.chatHistory = [];
+        this.chatSpeechToken = this.chatSpeechToken || 0;
+        this.chatHandsFree = false;
+        this.chatBusy = false;
 
-                        <div class="demo-info">
-                            <h3>✨ Recursos do ChatBot:</h3>
-                            <ul class="demo-features-list">
-                                <li>💬 Conversação natural em texto</li>
-                                <li>🎤 Entrada por comando de voz</li>
-                                <li>🔊 Respostas em áudio (TTS)</li>
-                                <li> IA treinada em acessibilidade</li>
-                                <li>📱 Disponível 24/7</li>
-                            </ul>
-                            <p class="demo-note">Este é um preview visual. Funcionalidade em desenvolvimento.</p>
-                        </div>
+        // O reconhecimento de voz do chat não pode competir com o de "Controle por voz"
+        this.chatPausedVoiceCommands = !!(this.settings.voiceCommands && this.isListening);
+        if (this.chatPausedVoiceCommands) this.stopVoiceRecognition();
+
+        // O assistente sempre abre com a leitura em voz alta ligada (pensado para quem não enxerga).
+        // Desligar vale só enquanto o chat está aberto e não fica salvo.
+        this.settings.chatSpeak = true;
+        const speakOn = true;
+        const overlay = document.createElement('div');
+        overlay.className = 'inclua-chat-overlay';
+        overlay.id = 'chatbot-modal';
+        overlay.innerHTML = `
+            <div class="inclua-chat-dialog" role="dialog" aria-modal="true" aria-labelledby="chatbot-title">
+                <div class="inclua-chat-header">
+                    <h3 class="inclua-chat-title" id="chatbot-title">💬 Assistente Inclua-AI</h3>
+                    <button type="button" class="inclua-chat-close" id="chat-close" aria-label="Fechar chat" title="Fechar (Esc)">✕</button>
+                </div>
+                <div class="chat-body">
+                    <div class="chat-log" id="chat-log" role="log" aria-label="Conversa com o assistente" aria-live="${speakOn ? 'off' : 'polite'}" tabindex="0"></div>
+                    <div class="chat-toolbar">
+                        <button type="button" class="chat-toggle" id="chat-speak" aria-pressed="${speakOn}" aria-keyshortcuts="Alt+L"></button>
+                        <button type="button" class="chat-toggle" id="chat-handsfree" aria-pressed="false" aria-keyshortcuts="Alt+C"></button>
+                        <button type="button" class="chat-toggle" id="chat-stop" aria-keyshortcuts="Alt+P">⏹️ Parar áudio (Alt+P)</button>
                     </div>
+                    <form class="chat-form" id="chat-form">
+                        <label for="chat-input" class="chat-sr">Digite sua pergunta</label>
+                        <input id="chat-input" type="text" autocomplete="off" maxlength="500" placeholder="Digite sua pergunta...">
+                        <button type="button" class="chat-mic" id="chat-mic" aria-label="Falar sua pergunta pelo microfone. Atalho Alt M" aria-keyshortcuts="Alt+M" title="Falar (Alt+M)"><span aria-hidden="true">🎤</span></button>
+                        <button type="submit" class="btn btn-primary" id="chat-send">Enviar</button>
+                    </form>
+                    <div class="chat-sr" id="chat-status" role="status" aria-live="polite"></div>
                 </div>
             </div>
         `;
+        document.body.appendChild(overlay);
+        this.activeModal = overlay;
 
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        const modal = document.getElementById('chatbot-modal');
-        this.activeModal = modal;
-        
-        // Fechar ao clicar fora do modal
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                this.closeChatbot();
+        const $ = (id) => overlay.querySelector('#' + id);
+        const input = $('chat-input');
+
+        // Reexibe a conversa anterior (se houver) ou cumprimenta
+        if (this.chatHistory.length) {
+            this.chatHistory.forEach(m => this.addChatMessage(m.role === 'user' ? 'user' : 'bot', m.content));
+        } else {
+            const greeting = 'Olá! Eu sou o assistente do Inclua-AI. Posso explicar como instalar, como usar cada recurso e quais são os atalhos. Você pode digitar sua pergunta, apertar o botão do microfone, com o atalho Alt M, para falar, ou ligar a conversa por voz, sem usar as mãos, com o atalho Alt C.';
+            this.addChatMessage('bot', greeting);
+            if (speakOn) this.speakChat(greeting);
+        }
+        this.updateChatToggles();
+
+        $('chat-close').addEventListener('click', () => this.closeChatbot());
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) this.closeChatbot(); });
+
+        $('chat-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const value = input.value;
+            input.value = '';
+            this.sendChatMessage(value);
+        });
+
+        $('chat-mic').addEventListener('click', () => {
+            if (this.chatRecognition) this.stopChatListening();
+            else this.startChatListening();
+        });
+
+        $('chat-speak').addEventListener('click', () => {
+            this.settings.chatSpeak = this.settings.chatSpeak === false;
+            if (this.settings.chatSpeak === false) this.stopSpeaking();
+            this.updateChatToggles();
+        });
+
+        $('chat-handsfree').addEventListener('click', () => {
+            this.chatHandsFree = !this.chatHandsFree;
+            if (this.chatHandsFree) {
+                // Conversa por voz precisa das respostas em áudio
+                if (this.settings.chatSpeak === false) { this.settings.chatSpeak = true; }
+                this.updateChatToggles();
+                this.setChatStatus('Conversa por voz ligada. Depois do sinal sonoro, fale sua pergunta.');
+                this.speakChat('Conversa por voz ligada. Depois do sinal sonoro, fale sua pergunta.', () => this.startChatListening());
+            } else {
+                this.stopChatListening();
+                this.stopSpeaking();
+                this.updateChatToggles();
+                this.setChatStatus('Conversa por voz desligada.');
             }
         });
-        
-        requestAnimationFrame(() => {
-            modal.style.display = 'flex';
-            requestAnimationFrame(() => modal.style.opacity = '1');
+
+        $('chat-stop').addEventListener('click', () => {
+            const wasHandsFree = this.chatHandsFree;
+            this.stopSpeaking();
+            this.stopChatListening();
+            this.chatHandsFree = false;
+            this.updateChatToggles();
+            this.setChatStatus(wasHandsFree ? 'Áudio parado. Conversa por voz desligada.' : 'Áudio parado.');
+            this.showToast(wasHandsFree ? '⏹️ Áudio parado e conversa por voz desligada' : '⏹️ Áudio parado', 'info');
         });
 
-        this.trapFocus(modal);
+        // Atalhos do chat valem em qualquer lugar da página enquanto ele estiver aberto
+        // (mesmo se o foco sair de dentro da janela):
+        // Esc fecha · Alt+L ler respostas · Alt+C conversa por voz · Alt+P parar áudio · Alt+M microfone
+        this.chatKeyHandler = (e) => {
+            if (!document.getElementById('chatbot-modal')) {
+                document.removeEventListener('keydown', this.chatKeyHandler, true);
+                return;
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                this.closeChatbot();
+                return;
+            }
+            if (e.altKey && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                const shortcuts = { KeyL: 'chat-speak', KeyC: 'chat-handsfree', KeyP: 'chat-stop', KeyM: 'chat-mic' };
+                const targetId = shortcuts[e.code];
+                if (targetId) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (!e.repeat) overlay.querySelector('#' + targetId).click();
+                    return;
+                }
+            }
+            if (e.key === 'Tab') {
+                const focusable = Array.from(overlay.querySelectorAll('button:not([hidden]), input, [tabindex="0"]'))
+                    .filter(el => !el.disabled && el.offsetParent !== null);
+                if (!focusable.length) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (!overlay.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+                else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }
+        };
+        document.addEventListener('keydown', this.chatKeyHandler, true);
+
+        input.focus();
     }
 
     closeChatbot() {
         const modal = document.getElementById('chatbot-modal');
-        if (modal) {
-            modal.style.opacity = '0';
-            setTimeout(() => modal.remove(), 300);
-            this.activeModal = null;
-            this.releaseFocus();
+        if (!modal) return;
+        if (this.chatKeyHandler) document.removeEventListener('keydown', this.chatKeyHandler, true);
+        this.chatHandsFree = false;
+        this.stopChatListening();
+        this.stopSpeaking();
+        modal.remove();
+        this.activeModal = null;
+        document.getElementById('inclua-ai-toggle')?.focus();
+
+        // Devolve o Controle por voz, se estava ativo
+        if (this.chatPausedVoiceCommands && this.settings.voiceCommands) {
+            this.chatPausedVoiceCommands = false;
+            this.initVoiceRecognition();
         }
     }
 
-    openCallCenter() {
-        const modalHTML = `
-            <div class="modal-overlay" id="callcenter-modal" role="dialog" aria-modal="true" aria-labelledby="callcenter-title">
-                <div class="modal-content demo-container">
-                    <div class="modal-header">
-                        <h2 id="callcenter-title" class="modal-title">☎️ Central de Atendimento</h2>
-                        <button class="modal-close" onclick="incluaAIWidget.closeCallCenter()" aria-label="Fechar" title="Fechar">
-                            ✕
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="demo-badge">🎭 Modo Demonstração</div>
-                        
-                        <div class="demo-preview call-preview">
-                            <div class="call-demo-screen">
-                                <div class="call-demo-avatar pulsing">
-                                    🎧
-                                </div>
-                                <h3>Atendente Virtual</h3>
-                                <p class="call-status-text">Conectado</p>
-                                <div class="call-timer-demo">02:34</div>
-                                
-                                <div class="call-controls-demo">
-                                    <div class="call-btn-demo mute">🔇</div>
-                                    <div class="call-btn-demo end">📞</div>
-                                    <div class="call-btn-demo speaker">🔊</div>
-                                </div>
-                                
-                                <div class="call-transcript-demo">
-                                    <p><strong>Você:</strong> Olá, preciso de ajuda</p>
-                                    <p><strong>Atendente:</strong> Olá! Como posso ajudar?</p>
-                                </div>
-                            </div>
-                        </div>
+    setChatStatus(text) {
+        const el = document.getElementById('chat-status');
+        if (el) el.textContent = text;
+    }
 
-                        <div class="demo-info">
-                            <h3>✨ Recursos da Central:</h3>
-                            <ul class="demo-features-list">
-                                <li>☎️ Atendimento por voz em tempo real</li>
-                                <li>🎯 Roteamento inteligente para departamentos</li>
-                                <li>📝 Transcrição automática da conversa</li>
-                                <li>🔊 Síntese de voz natural (TTS)</li>
-                                <li>🌐 Suporte multilíngue</li>
-                                <li>♿ Totalmente acessível</li>
-                            </ul>
-                            <p class="demo-note">Este é um preview visual. Funcionalidade em desenvolvimento.</p>
-                        </div>
-                    </div>
+    updateChatToggles() {
+        const speak = document.getElementById('chat-speak');
+        const hands = document.getElementById('chat-handsfree');
+        const log = document.getElementById('chat-log');
+        const speakOn = this.settings.chatSpeak !== false;
+        if (speak) {
+            speak.setAttribute('aria-pressed', String(speakOn));
+            speak.textContent = `🔊 Ler respostas em voz alta: ${speakOn ? 'ligado' : 'desligado'} (Alt+L)`;
+        }
+        if (hands) {
+            hands.setAttribute('aria-pressed', String(!!this.chatHandsFree));
+            hands.textContent = `🎙️ Conversa por voz, sem usar as mãos: ${this.chatHandsFree ? 'ligada' : 'desligada'} (Alt+C)`;
+        }
+        // Com voz ligada, o leitor de tela não anuncia as mensagens (evita falar duas vezes)
+        if (log) log.setAttribute('aria-live', speakOn ? 'off' : 'polite');
+    }
+
+    addChatMessage(role, text, typing = false) {
+        const log = document.getElementById('chat-log');
+        if (!log) return null;
+        const wrap = document.createElement('div');
+        wrap.className = `chat-msg ${role}${typing ? ' typing' : ''}`;
+        const who = document.createElement('span');
+        who.className = 'chat-who';
+        who.textContent = role === 'user' ? 'Você' : 'Assistente';
+        const body = document.createElement('p');
+        body.textContent = text;
+        wrap.append(who, body);
+        log.appendChild(wrap);
+        log.scrollTop = log.scrollHeight;
+        return wrap;
+    }
+
+    async sendChatMessage(rawText) {
+        const text = (rawText || '').trim();
+        if (!text || this.chatBusy) return;
+        // Em conversa por voz, "tchau", "obrigado", "não tenho mais dúvidas" encerram a conversa
+        if (this.chatHandsFree && this.isChatGoodbye(text)) {
+            this.endHandsFreeConversation(text);
+            return;
+        }
+        this.chatBusy = true;
+        this.stopSpeaking();
+
+        this.addChatMessage('user', text);
+        this.chatHistory.push({ role: 'user', content: text });
+        const typing = this.addChatMessage('bot', 'Pensando...', true);
+        this.setChatStatus('Pensando...');
+
+        let reply = '';
+        let failed = false;
+        try {
+            const response = await this.fetchWithTimeout(`${this.getApiBaseUrl()}/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: this.chatHistory })
+            }, 30000);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.reply) throw new Error(data.error || 'Falha na API');
+            reply = data.reply;
+        } catch (error) {
+            failed = true;
+            this.chatHistory.pop(); // não guarda a pergunta que falhou
+            reply = error.name === 'AbortError'
+                ? 'Desculpe, a resposta demorou demais. Tente de novo.'
+                : 'Desculpe, não consegui responder agora. Verifique se o servidor está ligado e tente de novo. Se precisar de ajuda de uma pessoa, fale com o NAPNE pelo telefone (35) 3571-5922 ou pelo e-mail napne@muz.ifsuldeminas.edu.br.';
+        }
+
+        if (typing) typing.remove();
+        // Se o chat foi fechado enquanto esperava, não faz mais nada
+        if (!document.getElementById('chatbot-modal')) { this.chatBusy = false; return; }
+
+        this.addChatMessage('bot', reply);
+        if (!failed) this.chatHistory.push({ role: 'assistant', content: reply });
+        this.setChatStatus('');
+        this.chatBusy = false;
+
+        const speakOn = this.settings.chatSpeak !== false;
+        if (speakOn) {
+            this.speakChat(reply, () => { if (this.chatHandsFree) this.startChatListening(); });
+        } else if (this.chatHandsFree) {
+            this.startChatListening();
+        }
+    }
+
+    isChatGoodbye(text) {
+        const t = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!t || t.split(' ').length > 12) return false;
+        // Se tem pergunta no meio ("obrigado, como instalo...?"), não é despedida
+        if (/\b(como|qual|quais|onde|quando|por que|porque|o que|quem|quanto|me ajuda|me explica)\b/.test(t)) return false;
+        return /\b(tchau|ate logo|ate mais|ate a proxima|obrigad[oa]|valeu|era so isso|e so isso|so isso|e so|pode encerrar|vamos encerrar|encerrar a conversa|finalizar|nao tenho mais (nenhuma )?(duvida|duvidas|pergunta|perguntas)|nenhuma (duvida|pergunta)|nao tenho mais nada|nao preciso de mais nada)\b/.test(t);
+    }
+
+    endHandsFreeConversation(userText) {
+        this.addChatMessage('user', userText);
+        const farewell = 'Tudo bem! Vou encerrar a conversa por voz. Se precisar de mais alguma coisa, é só ativar a conversa por voz de novo.';
+        this.addChatMessage('bot', farewell);
+        this.chatHandsFree = false;
+        this.stopChatListening();
+        this.updateChatToggles();
+        this.setChatStatus('Conversa por voz encerrada. Para ativar de novo, aperte Alt C.');
+        this.speakChat(farewell);
+    }
+
+    // Fala o texto em frases (evita o corte de falas longas em alguns navegadores)
+    speakChat(text, onDone) {
+        if (!('speechSynthesis' in window)) { if (onDone) onDone(); return; }
+        // E-mails ditos de forma compreensível: "napne arroba muz ponto ..."
+        text = text.replace(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi, (m) => m.replace('@', ' arroba ').replace(/\./g, ' ponto '));
+        // Telefones lidos número por número: (35) 3571-5922 -> "3 5, 3 5 7 1, 5 9 2 2"
+        text = text.replace(/\(?\d{2}\)?\s?\d{4,5}-\d{4}/g, (m) => m.replace(/\D/g, '').replace(/^(\d{2})(\d+)(\d{4})$/, '$1,$2,$3').split('').join(' ').replace(/ , /g, ', '));
+        speechSynthesis.cancel();
+        const token = ++this.chatSpeechToken;
+        const sentences = (text.replace(/\s+/g, ' ').match(/[^.!?]+[.!?]*/g) || [text]).map(s => s.trim()).filter(Boolean);
+        const chunks = [];
+        let current = '';
+        for (const s of sentences) {
+            if ((current + ' ' + s).length > 180 && current) { chunks.push(current); current = s; }
+            else current = current ? current + ' ' + s : s;
+        }
+        if (current) chunks.push(current);
+
+        chunks.forEach((chunk, i) => {
+            const u = new SpeechSynthesisUtterance(chunk);
+            u.lang = 'pt-BR';
+            u.rate = 1.0;
+            const isLast = i === chunks.length - 1;
+            u.onend = u.onerror = () => {
+                if (token !== this.chatSpeechToken) return; // cancelada ou substituída
+                if (isLast && onDone) onDone();
+            };
+            speechSynthesis.speak(u);
+        });
+    }
+
+    stopSpeaking() {
+        this.chatSpeechToken = (this.chatSpeechToken || 0) + 1;
+        this.currentSpeech = null;
+        if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+            setTimeout(() => speechSynthesis.cancel(), 60);
+        }
+    }
+
+    chatBeep() {
+        try {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            const ctx = new Ctx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = 880;
+            gain.gain.value = 0.08;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.12);
+            setTimeout(() => ctx.close(), 400);
+        } catch (e) { /* sem som, segue sem o sinal */ }
+    }
+
+    startChatListening() {
+        if (this.chatRecognition || this.chatBusy) return;
+        if (!document.getElementById('chatbot-modal')) return;
+
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            this.chatHandsFree = false;
+            this.updateChatToggles();
+            const msg = 'Seu navegador não suporta reconhecimento de voz. Use o Chrome ou o Edge, ou digite sua pergunta.';
+            this.addChatMessage('bot', msg);
+            if (this.settings.chatSpeak !== false) this.speakChat(msg);
+            return;
+        }
+
+        this.stopSpeaking(); // o microfone não pode ouvir a própria voz do assistente
+        const rec = new SR();
+        rec.lang = 'pt-BR';
+        rec.interimResults = false;
+        rec.continuous = false;
+        rec.maxAlternatives = 1;
+        this.chatRecognition = rec;
+        const mic = document.getElementById('chat-mic');
+
+        rec.onstart = () => {
+            this.chatBeep();
+            if (mic) { mic.classList.add('listening'); mic.setAttribute('aria-label', 'Ouvindo. Fale agora. Aperte para cancelar'); }
+            this.setChatStatus('Ouvindo. Fale agora.');
+        };
+
+        rec.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            this.sendChatMessage(transcript);
+        };
+
+        rec.onerror = (event) => {
+            let msg = '';
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                msg = 'Não tenho permissão para usar o microfone. Permita o microfone nas configurações do navegador.';
+            } else if (event.error === 'no-speech') {
+                msg = 'Não ouvi nada. Aperte o microfone para tentar de novo.';
+            } else if (event.error !== 'aborted') {
+                msg = 'Não consegui ouvir. Tente de novo ou digite sua pergunta.';
+            }
+            if (msg) {
+                this.chatHandsFree = false;
+                this.updateChatToggles();
+                this.setChatStatus(msg);
+                this.addChatMessage('bot', msg);
+                if (this.settings.chatSpeak !== false) this.speakChat(msg);
+            }
+        };
+
+        rec.onend = () => {
+            if (this.chatRecognition === rec) this.chatRecognition = null;
+            if (mic) { mic.classList.remove('listening'); mic.setAttribute('aria-label', 'Falar sua pergunta pelo microfone. Atalho Alt M'); }
+        };
+
+        try {
+            rec.start();
+        } catch (e) {
+            this.chatRecognition = null;
+        }
+    }
+
+    stopChatListening() {
+        if (this.chatRecognition) {
+            const rec = this.chatRecognition;
+            this.chatRecognition = null;
+            try { rec.abort(); } catch (e) { /* já parado */ }
+        }
+        const mic = document.getElementById('chat-mic');
+        if (mic) { mic.classList.remove('listening'); mic.setAttribute('aria-label', 'Falar sua pergunta pelo microfone. Atalho Alt M'); }
+    }
+
+    // ==========================================================================
+    // LIBRAS: avatar oficial (VLibras) e pedidos de tradução
+    // ==========================================================================
+
+    // Carrega e abre o avatar oficial do VLibras (gov.br). Ele traduz o texto que for selecionado na página.
+    ensureVLibras() {
+        const openAvatar = () => new Promise((resolve) => {
+            window.VLibrasWidget.open();
+            let tries = 0;
+            const wait = () => {
+                const root = document.getElementById('vlibras-app-root');
+                if ((root && root.dataset.active === 'true') || ++tries > 50) {
+                    // Na primeira abertura o avatar demora alguns segundos para ficar pronto
+                    setTimeout(resolve, this.vlibrasOpenedOnce ? 300 : 4000);
+                    this.vlibrasOpenedOnce = true;
+                } else setTimeout(wait, 200);
+            };
+            wait();
+        });
+
+        return new Promise((resolve, reject) => {
+            const start = () => {
+                try { if (!window.VLibrasWidget || !window.VLibrasWidget.open) new window.VLibras.Widget('https://vlibras.gov.br/app'); }
+                catch (e) { reject(e); return; }
+                let tries = 0;
+                const waitApi = () => {
+                    if (window.VLibrasWidget && typeof window.VLibrasWidget.open === 'function') openAvatar().then(resolve);
+                    else if (++tries > 50) reject(new Error('VLibras não iniciou'));
+                    else setTimeout(waitApi, 150);
+                };
+                waitApi();
+            };
+            if (window.VLibras && window.VLibras.Widget) { start(); return; }
+            const script = document.createElement('script');
+            script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
+            script.onload = start;
+            script.onerror = () => reject(new Error('Não foi possível carregar o VLibras'));
+            document.head.appendChild(script);
+        });
+    }
+
+    hideVLibras() {
+        const root = document.getElementById('vlibras-app-root');
+        if (root) root.dataset.active = 'false';
+    }
+
+    // Faz o avatar traduzir o texto de um elemento: seleciona o texto e avisa o VLibras, que traduz a seleção
+    async signWithVLibras(target) {
+        try {
+            await this.ensureVLibras();
+        } catch (e) {
+            this.showToast('Não foi possível abrir o avatar de Libras. O site pode estar bloqueando.', 'error');
+            return;
+        }
+        if (!this.settings.librasHover || !document.body.contains(target)) return;
+        this.librasSelecting = true; // evita que os outros recursos de "selecionar texto" reajam a esta seleção
+        try {
+            const range = document.createRange();
+            range.selectNodeContents(target);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+        } finally {
+            this.librasSelecting = false;
+        }
+        setTimeout(() => window.getSelection().removeAllRanges(), 300);
+    }
+
+    // ---------- Libras por pedido ----------
+
+    toggleLibrasRequest() {
+        this.settings.librasRequest = !this.settings.librasRequest;
+        if (this.settings.librasRequest) {
+            this.disableSelectionModes('libras-request');
+            if (!this.boundHandleLibrasRequest) this.boundHandleLibrasRequest = this.handleLibrasRequestSelection.bind(this);
+            document.addEventListener('mouseup', this.boundHandleLibrasRequest);
+            this.showToast('Selecione um texto para pedir a tradução em Libras', 'info');
+        } else {
+            if (this.boundHandleLibrasRequest) document.removeEventListener('mouseup', this.boundHandleLibrasRequest);
+            this.showToast('Libras por pedido desativado', 'info');
+        }
+    }
+
+    handleLibrasRequestSelection(event) {
+        if (this.activeModal || !this.settings.librasRequest) return;
+        const text = this.takeSelection(event, 3);
+        if (text) this.confirmLibrasRequest(text);
+    }
+
+    confirmLibrasRequest(text) {
+        const tooLong = text.length > 1000;
+        const shown = this.escapeHtml(text.length > 400 ? text.slice(0, 400) + '…' : text);
+        this.showModal('🤟 Pedir tradução em Libras', `
+            <div class="lr-box">
+                <p>Este texto será enviado para um tradutor de Libras gravar um vídeo. Quando o vídeo estiver pronto, ele aparece em <strong>Meus Pedidos de Libras</strong>.</p>
+                <blockquote class="lr-text">${shown}</blockquote>
+                ${tooLong ? '<p role="alert"><strong>O texto passa de 1000 caracteres.</strong> Selecione um trecho menor.</p>' : ''}
+                <div class="gen-image-actions">
+                    <button type="button" class="btn btn-primary" data-lr="send" ${tooLong ? 'disabled' : ''}>Enviar pedido</button>
+                    <button type="button" class="btn btn-secondary" data-lr="cancel">Cancelar</button>
                 </div>
             </div>
-        `;
-
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        const modal = document.getElementById('callcenter-modal');
-        this.activeModal = modal;
-        
-        // Fechar ao clicar fora do modal
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                this.closeCallCenter();
+        `);
+        const overlay = this.activeModal;
+        const close = () => overlay.querySelector('.modal-close').click();
+        overlay.querySelector('[data-lr="cancel"]').addEventListener('click', close);
+        overlay.querySelector('[data-lr="send"]').addEventListener('click', async (e) => {
+            e.currentTarget.disabled = true;
+            e.currentTarget.textContent = 'Enviando...';
+            const result = await this.sendLibrasRequest(text);
+            close();
+            if (!result) return;
+            if (result.status === 'done') {
+                this.showLibrasVideo(text, result.id, 'Este texto já tinha sido traduzido. Aqui está o vídeo:');
+            } else {
+                this.showModal('✅ Pedido enviado', `
+                    <div class="lr-box">
+                        <p>Seu pedido foi enviado para os tradutores de Libras. Quando o vídeo estiver pronto, você será avisado e poderá assistir em <strong>Meus Pedidos de Libras</strong> (atalho Alt+Shift+Q).</p>
+                    </div>
+                `);
+                this.announceToScreenReader('Pedido de tradução em Libras enviado');
             }
         });
-        
-        requestAnimationFrame(() => {
-            modal.style.display = 'flex';
-            requestAnimationFrame(() => modal.style.opacity = '1');
-        });
-
-        this.trapFocus(modal);
     }
 
-    closeCallCenter() {
-        const modal = document.getElementById('callcenter-modal');
-        if (modal) {
-            modal.style.opacity = '0';
-            setTimeout(() => modal.remove(), 300);
-            this.activeModal = null;
-            this.releaseFocus();
+    async sendLibrasRequest(text) {
+        try {
+            const response = await this.fetchWithTimeout(`${this.getApiBaseUrl()}/libras/requests`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, pageUrl: location.href })
+            }, 20000);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || 'Não foi possível enviar o pedido.');
+
+            const list = this.settings.librasRequests || [];
+            if (!list.some(r => r.id === data.id)) {
+                list.unshift({ id: data.id, text: text.slice(0, 1000), createdAt: new Date().toISOString(), status: data.status });
+            }
+            this.settings.librasRequests = list.slice(0, 50);
+            this.saveSettings();
+            return data;
+        } catch (error) {
+            this.showToast(error.name === 'AbortError' ? 'O servidor demorou para responder. Tente de novo.' : error.message, 'error');
+            return null;
         }
+    }
+
+    // Atualiza a situação dos pedidos guardados. Devolve os que ficaram prontos agora.
+    async refreshLibrasStatuses() {
+        const list = this.settings.librasRequests || [];
+        const waiting = list.filter(r => r.status !== 'done');
+        if (!waiting.length) return [];
+        try {
+            const ids = waiting.map(r => r.id).join(',');
+            const response = await this.fetchWithTimeout(`${this.getApiBaseUrl()}/libras/status?ids=${ids}`, {}, 15000);
+            if (!response.ok) return [];
+            const data = await response.json();
+            const readyNow = [];
+            (data.requests || []).forEach(s => {
+                const item = list.find(r => r.id === s.id);
+                if (item && item.status !== s.status) {
+                    item.status = s.status;
+                    if (s.status === 'done') readyNow.push(item);
+                }
+            });
+            if (readyNow.length) this.saveSettings();
+            return readyNow;
+        } catch (e) {
+            return [];
+        }
+    }
+
+    async checkLibrasReady() {
+        const readyNow = await this.refreshLibrasStatuses();
+        if (readyNow.length) {
+            const msg = readyNow.length === 1
+                ? '🤟 Seu vídeo em Libras está pronto! Abra "Meus Pedidos de Libras" (Alt+Shift+Q).'
+                : `🤟 ${readyNow.length} vídeos em Libras estão prontos! Abra "Meus Pedidos de Libras" (Alt+Shift+Q).`;
+            this.showToast(msg, 'success');
+        }
+    }
+
+    async openLibrasRequests() {
+        if ((this.settings.librasRequests || []).length) await this.refreshLibrasStatuses();
+        const list = this.settings.librasRequests || [];
+
+        if (!list.length) {
+            this.showModal('🤟 Meus Pedidos de Libras', `
+                <div class="lr-box"><p>Você ainda não pediu nenhuma tradução. Ligue <strong>Libras por Pedido</strong> (Alt+Shift+P), selecione um texto e envie o pedido.</p></div>
+            `);
+            return;
+        }
+
+        const items = list.map(r => {
+            const done = r.status === 'done';
+            const excerpt = this.escapeHtml(r.text.length > 160 ? r.text.slice(0, 160) + '…' : r.text);
+            return `
+                <li class="lr-item">
+                    <p class="lr-item-text">${excerpt}</p>
+                    <p class="lr-item-status ${done ? 'ready' : ''}">${done ? '✅ Pronto' : '⏳ Aguardando o tradutor'}</p>
+                    <div class="gen-image-actions">
+                        ${done ? `<button type="button" class="btn btn-primary" data-lr-watch="${r.id}">Assistir em Libras</button>` : ''}
+                        <button type="button" class="btn btn-secondary" data-lr-remove="${r.id}">Remover da lista</button>
+                    </div>
+                </li>`;
+        }).join('');
+
+        this.showModal('🤟 Meus Pedidos de Libras', `<ul class="lr-list">${items}</ul>`);
+        const overlay = this.activeModal;
+        overlay.querySelectorAll('[data-lr-watch]').forEach(btn => btn.addEventListener('click', () => {
+            const item = list.find(r => r.id === btn.dataset.lrWatch);
+            overlay.querySelector('.modal-close').click();
+            if (item) this.showLibrasVideo(item.text, item.id);
+        }));
+        overlay.querySelectorAll('[data-lr-remove]').forEach(btn => btn.addEventListener('click', () => {
+            this.settings.librasRequests = (this.settings.librasRequests || []).filter(r => r.id !== btn.dataset.lrRemove);
+            this.saveSettings();
+            overlay.querySelector('.modal-close').click();
+            this.openLibrasRequests();
+        }));
+    }
+
+    showLibrasVideo(text, id, intro = '') {
+        const url = `${this.getApiBaseUrl()}/libras/video/${encodeURIComponent(id)}`;
+        const shown = this.escapeHtml(text.length > 400 ? text.slice(0, 400) + '…' : text);
+        this.showModal('🤟 Tradução em Libras', `
+            <div class="lr-box">
+                ${intro ? `<p>${this.escapeHtml(intro)}</p>` : ''}
+                <video class="lr-video" controls autoplay playsinline src="${url}" aria-label="Vídeo em Libras do texto: ${shown}"></video>
+                <blockquote class="lr-text">${shown}</blockquote>
+            </div>
+        `);
     }
 }
 

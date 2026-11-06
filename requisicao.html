@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Pedidos de Libras · Inclua-AI</title>
+  <style>
+    :root { --bg:#f1f5f9; --card:#fff; --text:#0f172a; --muted:#475569; --line:#cbd5e1; --brand:#2563eb; --brand-dark:#1d4ed8; --ok:#15803d; --bad:#b91c1c; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); line-height:1.55; }
+    header { background:#0f172a; color:#fff; padding:20px 16px; }
+    header .wrap, main { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+    header h1 { margin:0 0 4px; font-size:1.5rem; }
+    header p { margin:0; color:#cbd5e1; }
+    main { padding-top: 20px; padding-bottom: 60px; }
+    h2 { font-size:1.2rem; margin:28px 0 12px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+    .meta { color:var(--muted); font-size:.88rem; margin:0 0 8px; }
+    .text { font-size:1.05rem; margin:0 0 12px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .badge { display:inline-block; background:#dbeafe; color:#1e3a8a; border-radius:999px; padding:2px 10px; font-size:.8rem; font-weight:700; margin-left:6px; }
+    .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    button, .btn { font:inherit; font-weight:600; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--text); padding:10px 14px; cursor:pointer; }
+    button.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+    button.primary:hover { background:var(--brand-dark); }
+    button.danger { color:var(--bad); }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    input[type=password], input[type=file] { font:inherit; padding:10px; border:1px solid var(--line); border-radius:10px; background:#fff; max-width:100%; }
+    :focus-visible { outline:3px solid var(--brand); outline-offset:2px; }
+    video { width:100%; max-width:520px; border-radius:12px; background:#000; display:block; margin:10px 0; }
+    .recorder { margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); }
+    .status { min-height:1.4em; margin:6px 0 0; font-weight:600; }
+    .status.ok { color:var(--ok); } .status.err { color:var(--bad); }
+    .empty { color:var(--muted); }
+    #login { max-width:460px; margin:40px auto; }
+    .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+    .rec-dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#dc2626; margin-right:6px; animation:pulse 1s infinite; }
+    @keyframes pulse { 50% { opacity:.3; } }
+    @media (prefers-reduced-motion: reduce) { .rec-dot { animation:none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>🤟 Pedidos de tradução em Libras</h1>
+      <p>Textos que as pessoas pediram para ter em Libras. Grave um vídeo e ele fica disponível para quem pediu.</p>
+    </div>
+  </header>
+
+  <main>
+    <section id="login" class="card" aria-labelledby="login-title">
+      <h2 id="login-title" style="margin-top:0">Entrar como tradutor</h2>
+      <p class="meta">Digite a chave de acesso dos tradutores de Libras.</p>
+      <form id="login-form" class="row">
+        <label for="key" class="sr">Chave de acesso</label>
+        <input id="key" type="password" autocomplete="off" placeholder="Chave de acesso" required>
+        <button class="primary" type="submit">Entrar</button>
+      </form>
+      <p id="login-status" class="status err" role="alert"></p>
+    </section>
+
+    <div id="app" hidden>
+      <div class="row" style="justify-content:space-between">
+        <button id="refresh" type="button">↻ Atualizar lista</button>
+        <button id="logout" type="button">Sair</button>
+      </div>
+      <p id="app-status" class="status" role="status"></p>
+
+      <h2 id="pending-title">Aguardando tradução <span id="pending-count" class="badge">0</span></h2>
+      <div id="pending" aria-labelledby="pending-title"></div>
+
+      <h2 id="done-title">Já traduzidos</h2>
+      <div id="done" aria-labelledby="done-title"></div>
+    </div>
+  </main>
+
+  <script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    let key = '';
+    try { key = sessionStorage.getItem('libras-key') || ''; } catch (e) {}
+
+    const api = async (path, options = {}) => {
+      const res = await fetch(path, { ...options, headers: { ...(options.headers || {}), Authorization: 'Bearer ' + key } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { const err = new Error(data.error || 'Erro ' + res.status); err.status = res.status; throw err; }
+      return data;
+    };
+    const fmt = (iso) => iso ? new Date(iso).toLocaleString('pt-BR') : '';
+    const el = (tag, props = {}, ...kids) => {
+      const n = Object.assign(document.createElement(tag), props);
+      kids.flat().forEach(k => n.append(k));
+      return n;
+    };
+    const say = (msg, kind) => { const s = $('app-status'); s.textContent = msg || ''; s.className = 'status ' + (kind || ''); };
+
+    function showApp(on) { $('login').hidden = on; $('app').hidden = !on; }
+
+    async function load() {
+      try {
+        const data = await api('/libras/admin/requests');
+        showApp(true);
+        render(data);
+      } catch (e) {
+        if (e.status === 401) {
+          try { sessionStorage.removeItem('libras-key'); } catch (x) {}
+          key = '';
+          showApp(false);
+          $('login-status').textContent = 'Chave inválida.';
+        } else { say(e.message, 'err'); }
+      }
+    }
+
+    function render({ pending, done }) {
+      $('pending-count').textContent = pending.length;
+      const p = $('pending'); p.replaceChildren();
+      if (!pending.length) p.append(el('p', { className: 'empty', textContent: 'Nenhum pedido aguardando. 🎉' }));
+      pending.forEach(r => p.append(pendingCard(r)));
+
+      const d = $('done'); d.replaceChildren();
+      if (!done.length) d.append(el('p', { className: 'empty', textContent: 'Ainda não há vídeos.' }));
+      done.forEach(r => d.append(doneCard(r)));
+    }
+
+    function pendingCard(r) {
+      const status = el('p', { className: 'status', role: 'status' });
+      const card = el('article', { className: 'card' },
+        el('p', { className: 'meta' }, 'Pedido em ' + fmt(r.createdAt), r.count > 1 ? el('span', { className: 'badge', textContent: r.count + ' pessoas pediram' }) : ''),
+        el('p', { className: 'text', textContent: r.text }),
+        r.pageUrl ? el('p', { className: 'meta' }, 'Veio de: ', el('a', { href: r.pageUrl, target: '_blank', rel: 'noopener noreferrer', textContent: r.pageUrl })) : ''
+      );
+
+      const recorder = el('div', { className: 'recorder' });
+      const camBtn = el('button', { type: 'button', textContent: '🎥 Gravar com a câmera' });
+      const fileLabel = el('label', { className: 'meta' }, 'ou enviar um vídeo pronto: ');
+      const file = el('input', { type: 'file', accept: 'video/webm,video/mp4,video/quicktime' });
+      fileLabel.append(file);
+      const delBtn = el('button', { type: 'button', className: 'danger', textContent: 'Excluir pedido' });
+      recorder.append(el('div', { className: 'row' }, camBtn, delBtn), el('div', { style: 'margin-top:10px' }, fileLabel));
+      card.append(recorder, status);
+
+      const upload = async (blob, type) => {
+        status.className = 'status'; status.textContent = 'Enviando vídeo...';
+        try {
+          await api('/libras/admin/requests/' + r.id + '/video', { method: 'POST', headers: { 'Content-Type': type }, body: blob });
+          status.className = 'status ok'; status.textContent = 'Vídeo enviado! Já está disponível para quem pediu.';
+          setTimeout(load, 800);
+        } catch (e) { status.className = 'status err'; status.textContent = e.message; }
+      };
+
+      file.addEventListener('change', () => {
+        const f = file.files[0];
+        if (f) upload(f, f.type || 'video/mp4');
+      });
+
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('Excluir este pedido? Essa ação não pode ser desfeita.')) return;
+        try { await api('/libras/admin/requests/' + r.id, { method: 'DELETE' }); load(); }
+        catch (e) { status.className = 'status err'; status.textContent = e.message; }
+      });
+
+      camBtn.addEventListener('click', () => startCamera(recorder, camBtn, status, upload));
+      return card;
+    }
+
+    // Gravação pela câmera, direto no navegador
+    async function startCamera(box, camBtn, status, upload) {
+      if (!navigator.mediaDevices || !window.MediaRecorder) {
+        status.className = 'status err'; status.textContent = 'Este navegador não permite gravar. Envie um vídeo pronto.'; return;
+      }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 }, audio: false }); }
+      catch (e) { status.className = 'status err'; status.textContent = 'Não consegui abrir a câmera. Permita o acesso à câmera.'; return; }
+
+      camBtn.disabled = true;
+      const preview = el('video', { autoplay: true, muted: true, playsInline: true, controls: false, 'aria-label': 'Prévia da câmera' });
+      preview.srcObject = stream;
+      const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'].find(t => MediaRecorder.isTypeSupported(t));
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      const chunks = [];
+      rec.ondataavailable = (ev) => { if (ev.data.size) chunks.push(ev.data); };
+
+      const startBtn = el('button', { type: 'button', className: 'primary', textContent: '⏺ Começar a gravar' });
+      const stopBtn = el('button', { type: 'button', textContent: '⏹ Parar', disabled: true });
+      const cancelBtn = el('button', { type: 'button', textContent: 'Cancelar' });
+      const controls = el('div', { className: 'row' }, startBtn, stopBtn, cancelBtn);
+      box.append(preview, controls);
+
+      const cleanup = () => { stream.getTracks().forEach(t => t.stop()); preview.remove(); controls.remove(); camBtn.disabled = false; };
+
+      startBtn.addEventListener('click', () => {
+        rec.start();
+        startBtn.disabled = true; stopBtn.disabled = false;
+        status.className = 'status'; status.replaceChildren(el('span', { className: 'rec-dot' }), 'Gravando...');
+      });
+      stopBtn.addEventListener('click', () => rec.stop());
+      cancelBtn.addEventListener('click', () => { rec.ondataavailable = null; rec.onstop = null; if (rec.state !== 'inactive') rec.stop(); cleanup(); status.textContent = ''; });
+
+      rec.onstop = () => {
+        const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
+        const blob = new Blob(chunks, { type });
+        stream.getTracks().forEach(t => t.stop());
+        preview.srcObject = null;
+        preview.src = URL.createObjectURL(blob);
+        preview.controls = true; preview.muted = false; preview.autoplay = false;
+        status.className = 'status'; status.textContent = 'Confira o vídeo e envie, ou grave de novo.';
+        controls.replaceChildren();
+        const send = el('button', { type: 'button', className: 'primary', textContent: '⬆ Enviar este vídeo' });
+        const redo = el('button', { type: 'button', textContent: 'Gravar de novo' });
+        controls.append(send, redo);
+        send.addEventListener('click', () => { send.disabled = true; upload(blob, type); });
+        redo.addEventListener('click', () => { preview.remove(); controls.remove(); camBtn.disabled = false; status.textContent = ''; startCamera(box, camBtn, status, upload); });
+      };
+    }
+
+    function doneCard(r) {
+      return el('article', { className: 'card' },
+        el('p', { className: 'meta' }, 'Traduzido em ' + fmt(r.doneAt), r.count > 1 ? el('span', { className: 'badge', textContent: r.count + ' pedidos' }) : ''),
+        el('p', { className: 'text', textContent: r.text }),
+        el('p', { className: 'meta' }, el('a', { href: r.videoUrl, target: '_blank', rel: 'noopener', textContent: 'Abrir vídeo' }))
+      );
+    }
+
+    $('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      key = $('key').value.trim();
+      try { sessionStorage.setItem('libras-key', key); } catch (x) {}
+      $('login-status').textContent = '';
+      load();
+    });
+    $('refresh').addEventListener('click', () => { say('Atualizando...'); load().then(() => say('Lista atualizada.', 'ok')); });
+    $('logout').addEventListener('click', () => { try { sessionStorage.removeItem('libras-key'); } catch (x) {} key = ''; showApp(false); });
+
+    if (key) load();
+  })();
+  </script>
+</body>
+</html>

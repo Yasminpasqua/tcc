@@ -332,3 +332,5 @@ Thumbs.db
 # Documentation build
 docs/build/
 docs/_build/
+# Pedidos de Libras (textos, vídeos e chave dos tradutores)
+servidor/data/
