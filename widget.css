@@ -204,8 +204,36 @@
   padding: 8px 0;
   overflow-y: auto;
   flex: 1;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-light) transparent;
+}
+
+/* Barra de rolagem sempre visível, azul e um pouco mais larga */
+.panel-content::-webkit-scrollbar {
+  width: 12px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 8px;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.panel-content::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
+  background-clip: padding-box;
+}
+
+/* Firefox (não suporta ::-webkit-scrollbar) */
+@supports not selector(::-webkit-scrollbar) {
+  .panel-content {
+    scrollbar-width: auto;
+    scrollbar-color: var(--primary-color) rgba(59, 130, 246, 0.12);
+  }
 }
 
 /* Seções */
