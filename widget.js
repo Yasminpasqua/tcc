@@ -261,6 +261,7 @@ ${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
 
             ${this.createSection('Assistência Virtual', [
             { id: 'chatbot', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M9 14s1 2 3 2 3-2 3-2"/></svg>', title: 'ChatBot Assistente', desc: 'Converse com IA', key: 'Alt+Shift+H' },
+            { id: 'voice-commands', emoji: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>', title: 'Controle por Voz', desc: 'Fale os comandos', key: 'Alt+Shift+V' },
         ])}
 
             <div class="menu-footer">
@@ -2819,6 +2820,8 @@ ${this.createCategory('auditiva', '', 'Deficiência Auditiva', '#10b981', [
         const saved = localStorage.getItem('inclua-ai-settings');
         if (saved) {
             this.settings = { ...this.settings, ...JSON.parse(saved) };
+            // O microfone nunca começa ligado: precisa de um clique/atalho e da permissão do navegador
+            this.settings.voiceCommands = false;
             this.applySettings();
         }
     }
